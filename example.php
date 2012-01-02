@@ -4,11 +4,13 @@ use \FUnit\fu;
 require __DIR__ . '/FUnit.php';
 
 fu::setup(function() {
-	putenv('FOOBAR=baz');
+	// set a fixture to use in tests
+	fu::fixture('foobar', array('foo'=>'bar'));
 });
 
 fu::teardown(function() {
-	putenv('FOOBAR=');
+	// this resets the fu::$fixtures array. May not provide clean shutdown
+	fu::reset_fixtures();
 });
 
 fu::test("this is a test", function() {
@@ -19,7 +21,12 @@ fu::test("this is a test", function() {
 fu::test("another test", function() {
 	fu::equal(true, 1, "the integer '1' is truthy");
 	fu::not_strict_equal(true, 1, "the integer '1' is NOT true");
-	fu::equal(getenv('FOOBAR'), 'baz', "the env var 'foobar' should be 'baz' from fu::setup()");
+	// access a fixture
+	$foobar = fu::fixture('foobar');
+	fu::equal($foobar['foo'], 'bar', "the fixture 'foobar' should have a key 'foo' equal to 'baz'");
 });
 
 fu::run();
+
+
+var_dump(fu::$fixtures);

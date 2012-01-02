@@ -35,37 +35,49 @@ Will output:
 
 See the `example.php` file for more.
 
-## Methods n stuff
 
+## Methods
 
-`fu::test($name, \Closure $test)`
+* `fu::test($name, \Closure $test)`
 
-Add a test with the name $name and an anonymous function $test. $test would contain various **assertions**, like `fu::ok()`
+  Add a test with the name $name and an anonymous function $test. $test would contain various **assertions**, like `fu::ok()`
 
-`fu::ok($a, $msg = null)`
+* `fu::ok($a, $msg = null)`
 
-Assert that $a is truthy. Optional $msg describes the test
+  Assert that $a is truthy. Optional $msg describes the test
 
-`fu::equal($a, $b, $msg = null)`
+* `fu::equal($a, $b, $msg = null)`
 
-Assert that $a == $b. Optional $msg describes the test
+  Assert that $a == $b. Optional $msg describes the test
 
-`fu::not_equal($a, $b, $msg = null)`
+* `fu::not_equal($a, $b, $msg = null)`
 
-Assert that $a != $b. Optional $msg describes the test
+  Assert that $a != $b. Optional $msg describes the test
 
-`fu::strict_equal($a, $b, $msg = null)`
+* `fu::strict_equal($a, $b, $msg = null)`
 
-Assert that $a === $b. Optional $msg describes the test
+  Assert that $a === $b. Optional $msg describes the test
 
-`fu::deep_not_equal($a, $b, $msg = null)`
+* `fu::deep_not_equal($a, $b, $msg = null)`
 
-Assert that $a !== $b. Optional $msg describes the test
+  Assert that $a !== $b. Optional $msg describes the test
 
-`fu::setup(\Closure $setup)`
+* `fu::setup(\Closure $setup)`
 
-Register a function to run at the start of each test
+  Register a function to run at the start of each test. See `fu::fixture()`
 
-`fu::teardown(\Closure $setup)`
+* `fu::teardown(\Closure $setup)`
 
-Register a function to run at the end of each test
+  Register a function to run at the end of each test. See `fu::fixture()` and `fu::reset_fixtures()`
+
+* `fu::fixture($key, [$val])`
+
+  Retrieve or register a fixture. Use this in fu::setup() to assign fixtures to keys, and retrieve those fixtures in your tests
+
+* `fu::reset_fixtures()`
+
+  Clears out all fixtures in the fu::$fixtures array. This doesn't guarantee clean shutdown/close
+
+* `fu::run($report = true)`
+
+  Runs the registered tests. If `false` is passed, the report output is suppressed
