@@ -200,12 +200,12 @@ class fu {
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 	}
 
-	public static function deep_equal($a, $b, $msg = null) {
+	public static function strict_equal($a, $b, $msg = null) {
 		$rs = ($a === $b);
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 	}
 
-	public static function not_deep_equal($a, $b, $msg = null) {
+	public static function not_strict_equal($a, $b, $msg = null) {
 		$rs = ($a !== $b);
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 	}

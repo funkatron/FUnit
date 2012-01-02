@@ -54,7 +54,7 @@ Assert that $a == $b. Optional $msg describes the test
 
 Assert that $a != $b. Optional $msg describes the test
 
-`fu::deep_equal($a, $b, $msg = null)`
+`fu::strict_equal($a, $b, $msg = null)`
 
 Assert that $a === $b. Optional $msg describes the test
 

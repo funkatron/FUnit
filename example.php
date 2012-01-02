@@ -18,7 +18,7 @@ fu::test("this is a test", function() {
 
 fu::test("another test", function() {
 	fu::equal(true, 1, "the integer '1' is truthy");
-	fu::not_deep_equal(true, 1, "the integer '1' is NOT true");
+	fu::not_strict_equal(true, 1, "the integer '1' is NOT true");
 	fu::equal(getenv('FOOBAR'), 'baz', "the env var 'foobar' should be 'baz' from fu::setup()");
 });
 
