@@ -27,6 +27,12 @@ class fu {
 
 	static $fixtures = array();
 
+	/**
+	 * Output a report. Currently only supports text output
+	 *
+	 * @param string $format default is 'text'
+	 * @see fu::report_text()
+	 */
 	public static function report($format = 'text') {
 		switch($format) {
 			case 'text':
@@ -35,6 +41,14 @@ class fu {
 		}
 	}
 
+	/**
+	 * Output a report as text
+	 *
+	 * Normally you would not call this method directly
+	 *
+	 * @see fu::report()
+	 * @see fu::run()
+	 */
 	public static function report_text() {
 		$total_assert_counts = static::assert_counts();
 		$test_counts = static::test_counts();
@@ -59,6 +73,13 @@ class fu {
 				. "{$test_counts['total']} total\n";
 	}
 
+	/**
+	 * add a test to be executed
+	 *
+	 * Normally you would not call this method directly
+	 * @param string $name the name of the test
+	 * @param Closure $test the function to execute for the test
+	 */
 	public static function add_test($name, \Closure $test) {
 		static::$tests[$name] = array(
 			'run' => false,
@@ -69,13 +90,37 @@ class fu {
 		);
 	}
 
-
+	/**
+	 * add the result of an assertion
+	 *
+	 * Normally you would not call this method directly
+	 *
+	 * @param string $func_name the name of the assertion function
+	 * @param array $func_args the arguments for the assertion. Really just the $a (actual) and $b (expected)
+	 * @param mixed $result this is expected to be truthy or falsy, and is converted into fu::PASS or fu::FAIL
+	 * @param string $msg optional message describing the assertion
+	 * @see fu::ok()
+	 * @see fu::equal()
+	 * @see fu::not_equal()
+	 * @see fu::strict_equal()
+	 * @see fu::not_strict_equal()
+	 */
 	public static function add_assertion_result($func_name, $func_args, $result, $msg = null) {
 		$result = ($result) ? static::PASS : static::FAIL;
 		static::$tests[static::$current_test_name]['assertions'][] = compact('func_name', 'func_args', 'result', 'msg');
 	}
 
-
+	/**
+	 * Normally you would not call this method directly
+	 *
+	 * Run a single test of the passed $name
+	 *
+	 * @param string $name the name of the test to run
+	 * @see fu::run_tests()
+	 * @see fu::setup()
+	 * @see fu::teardown()
+	 * @see fu::test()
+	 */
 	public static function run_test($name) {
 		echo "Running test '{$name}...'\n";
 
@@ -109,13 +154,30 @@ class fu {
 		}
 	}
 
-
+	/**
+	 * Normally you would not call this method directly
+	 *
+	 * Run all of the registered tests
+	 *
+	 * @see fu::run()
+	 * @see fu::run_test()
+	 */
 	public static function run_tests() {
 		foreach (static::$tests as $name => &$test) {
 			static::run_test($name);
 		}
 	}
 
+	/**
+	 * Normally you would not call this method directly
+	 *
+	 * Retrieves stats about assertions run. returns an array with the keys 'total', 'pass', 'fail'
+	 *
+	 * If called without passing a test name, retrieves info about all assertions. Else just for the named test
+	 *
+	 * @param string $test_name optional the name of the test about which to get assertion stats
+	 * @return array has keys 'total', 'pass', 'fail'
+	 */
 	public static function assert_counts($test_name = null) {
 
 		$total = 0;
@@ -161,7 +223,14 @@ class fu {
 
 	}
 
-
+	/**
+	 * Normally you would not call this method directly
+	 *
+	 * Retrieves stats about tests run. returns an array with the keys 'total', 'pass', 'run'
+	 *
+	 * @param string $test_name optional the name of the test about which to get assertion stats
+	 * @return array has keys 'total', 'pass', 'run'
+	 */
 	public static function test_counts() {
 		$total = count(static::$tests);
 		$run = 0;
@@ -190,6 +259,7 @@ class fu {
 	 *
 	 * @param string $key the key to set or retrieve
 	 * @param mixed $val the value to assign to the key. OPTIONAL
+	 * @see fu::setup()
 	 * @return mixed the value of the $key passed.
 	 */
 	public static function fixture($key, $val = null) {
@@ -202,49 +272,114 @@ class fu {
 
 	/**
 	 * removes all fixtures. This won't magically close connections or files, tho
+	 *
+	 * @see fu::fixture()
+	 * @see fu::teardown()
 	 */
 	public static function reset_fixtures() {
 		static::$fixtures = array();
 	}
 
-
+	/**
+	 * register a function to run at the start of each test
+	 *
+	 * typically you'd use the passed function to register some fixtures
+	 *
+	 * @param Closure $setup an anon function
+	 * @see fu::fixture()
+	 */
 	public static function setup(\Closure $setup) {
 		static::$setup_func = $setup;
 	}
 
+	/**
+	 * register a function to run at the end of each test
+	 *
+	 * typically you'd use the passed function to close/clean-up any fixtures you made
+	 *
+	 * @param Closure $teardown an anon function
+	 * @see fu::fixture()
+	 * @see fu::reset_fixtures()
+	 */
 	public static function teardown(\Closure $teardown) {
 		static::$teardown_func = $teardown;
 	}
 
+	/**
+	 * add a test to be run
+	 *
+	 * @param string $name the name for the test
+	 * @param Closure $test the test function
+	 */
 	public static function test($name, \Closure $test) {
 		static::add_test($name, $test);
 	}
 
+	/**
+	 * assert that $a is equal to $b. Uses `==` for comparison
+	 *
+	 * @param mixed $a the actual value
+	 * @param mixed $b the expected value
+	 * @param string $msg optional description of assertion
+	 */
 	public static function equal($a, $b, $msg = null) {
 		$rs = ($a == $b);
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 	}
 
+	/**
+	 * assert that $a is not equal to $b. Uses `!=` for comparison
+	 *
+	 * @param mixed $a the actual value
+	 * @param mixed $b the expected value
+	 * @param string $msg optional description of assertion
+	 */
 	public static function not_equal($a, $b, $msg = null) {
 		$rs = ($a != $b);
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 	}
 
+	/**
+	 * assert that $a is strictly equal to $b. Uses `===` for comparison
+	 *
+	 * @param mixed $a the actual value
+	 * @param mixed $b the expected value
+	 * @param string $msg optional description of assertion
+	 */
 	public static function strict_equal($a, $b, $msg = null) {
 		$rs = ($a === $b);
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 	}
 
+	/**
+	 * assert that $a is strictly not equal to $b. Uses `!==` for comparison
+	 *
+	 * @param mixed $a the actual value
+	 * @param mixed $b the expected value
+	 * @param string $msg optional description of assertion
+	 */
 	public static function not_strict_equal($a, $b, $msg = null) {
 		$rs = ($a !== $b);
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 	}
 
+	/**
+	 * assert that $a is truthy. Casts $a to boolean for result
+	 * @param mixed $a the actual value
+	 * @param string $msg optional description of assertion
+	 */
 	public static function ok($a, $msg = null) {
 		$rs = (bool)$a;
 		static::add_assertion_result(__FUNCTION__, array($a), $rs, $msg);
 	}
 
+	/**
+	 * Run the registered tests, and output a report
+	 *
+	 * @param boolean $report whether or not to output a report after tests run. Default true.
+	 * @see fu::run_tests()
+	 * @see fu::report()
+	 */
 	public static function run($report = true) {
 		static::run_tests();
 		if ($report) { static::report(); }
