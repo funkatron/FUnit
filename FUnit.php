@@ -25,6 +25,8 @@ class fu {
 
 	static $teardown_func = null;
 
+	static $fixtures = array();
+
 	public static function report($format = 'text') {
 		switch($format) {
 			case 'text':
@@ -175,6 +177,34 @@ class fu {
 		}
 
 		return compact('total', 'pass', 'run');
+	}
+
+	/**
+	 * helper to deal with scoping fixtures. To store a fixture:
+	 * 	fu::fixture('foo', 'bar');
+	 * to retrieve a fixture:
+	 * 	fu::fixture('foo');
+	 *
+	 * I wish we didn't have to do this. In PHP 5.4 we may just be
+	 * able to bind the tests to an object and access fixtures via $this
+	 *
+	 * @param string $key the key to set or retrieve
+	 * @param mixed $val the value to assign to the key. OPTIONAL
+	 * @return mixed the value of the $key passed.
+	 */
+	public static function fixture($key, $val = null) {
+		if (isset($val)) {
+			static::$fixtures[$key] = $val;
+		}
+
+		return static::$fixtures[$key];
+	}
+
+	/**
+	 * removes all fixtures. This won't magically close connections or files, tho
+	 */
+	public static function reset_fixtures() {
+		static::$fixtures = array();
 	}
 
 
