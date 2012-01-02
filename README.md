@@ -58,7 +58,7 @@ See the `example.php` file for more.
 
   Assert that $a === $b. Optional $msg describes the test
 
-* `fu::deep_not_equal($a, $b, $msg = null)`
+* `fu::not_strict_equal($a, $b, $msg = null)`
 
   Assert that $a !== $b. Optional $msg describes the test
 
