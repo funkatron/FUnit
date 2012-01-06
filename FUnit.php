@@ -27,6 +27,41 @@ class fu {
 
 	static $fixtures = array();
 
+	private static $TERM_COLORS = array(
+		'BLACK' => "30",
+		'RED' => "31",
+		'GREEN' => "32",
+		'YELLOW' => "33",
+		'BLUE' => "34",
+		'MAGENTA' => "35",
+		'CYAN' => "36",
+		'WHITE' => "37",
+		'DEFAULT' => "00",
+	);
+
+	/**
+	 * Format a line for printing. Detects
+	 * if the script is being run from the command
+	 * line or from a browser.
+	 *
+	 * Colouring code loosely based on
+	 * http://www.zend.com//code/codex.php?ozid=1112&single=1
+	 *
+	 * @param string $line
+	 * @param string $color default is 'DEFAULT'
+	 * @see fu::$TERM_COLORS
+	 */
+	private static function color($txt, $color='DEFAULT') {
+		if (PHP_SAPI === 'cli') {
+			$color = static::$TERM_COLORS[$color];
+			$txt = chr(27) . "[0;{$color}m{$txt}" . chr(27) . "[00m";
+		} else {
+			$color = strtolower($color);
+			$txt = "<span style=\"color: $color;\">$txt</span>";
+		}
+		return $txt;
+	}
+
 	/**
 	 * Output a report. Currently only supports text output
 	 *
@@ -53,24 +88,34 @@ class fu {
 		$total_assert_counts = static::assert_counts();
 		$test_counts = static::test_counts();
 
-		echo "RESULTS:\n";
+		echo "RESULTS:";
 		echo "--------------------------------------------\n";
+
 		foreach (static::$tests as $name => $tdata) {
+
 			$assert_counts = static::assert_counts($name);
-			echo "TEST: {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):\n";
+			$test_color = $assert_counts['pass'] === $assert_counts['total'] ? 'GREEN' : 'RED';
+			echo "TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):\n", $test_color);
+
 			foreach ($tdata['assertions'] as $ass) {
-				echo " * {$ass['result']} {$ass['func_name']}(";
-				echo implode(', ', $ass['func_args']);
-				echo ") {$ass['msg']}\n";
+				$assert_color = $ass['result'] == static::PASS ? 'GREEN' : 'RED';
+				echo " * "
+					. static::color("{$ass['result']}"
+					. " {$ass['func_name']}("
+					. implode(', ', $ass['func_args'])
+					. ") {$ass['msg']}\n", $assert_color);
 			}
 			echo "\n";
 		}
-		echo "TOTAL ASSERTIONS: {$total_assert_counts['pass']} pass, "
-				. "{$total_assert_counts['fail']} fail, "
-				. "{$total_assert_counts['total']} total\n";
+
+		echo "TOTAL ASSERTIONS: "
+				. static::color("{$total_assert_counts['pass']} pass", 'GREEN') . ", "
+				. static::color("{$total_assert_counts['fail']} fail", 'RED') . ", "
+				. static::color("{$total_assert_counts['total']} total\n", 'WHITE');
+
 		echo "TESTS: {$test_counts['run']} run, "
-				. "{$test_counts['pass']} pass, "
-				. "{$test_counts['total']} total\n";
+				. static::color("{$test_counts['pass']} pass", 'GREEN') . ", "
+				. static::color("{$test_counts['total']} total\n", 'WHITE');
 	}
 
 	/**
