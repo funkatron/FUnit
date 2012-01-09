@@ -419,6 +419,14 @@ class fu {
 	}
 
 	/**
+	 * Force a failed assertion
+	 * @param string $msg optional description of assertion
+	 */
+	public static function fail($msg = null) {
+		static::add_assertion_result(__FUNCTION__, array(), false, $msg);
+	}
+
+	/**
 	 * Run the registered tests, and output a report
 	 *
 	 * @param boolean $report whether or not to output a report after tests run. Default true.
