@@ -26,7 +26,11 @@ fu::test("another test", function() {
 	fu::equal($foobar['foo'], 'bar', "the fixture 'foobar' should have a key 'foo' equal to 'baz'");
 });
 
+fu::test('Forced failure', function() {
+	fu::fail('Here we can describe a missing test!');
+});
+
 fu::run();
 
-
+// this should output an empty array, because our fixtures will be gone
 var_dump(fu::$fixtures);
