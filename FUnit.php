@@ -229,7 +229,7 @@ class fu {
 		$pass  = 0;
 		$fail  = 0;
 
-		$test_asserts = function($test_name, $assertions) use ($total, $pass, $fail) {
+		$test_asserts = function($test_name, $assertions) {
 
 			$total = 0;
 			$pass  = 0;
