@@ -62,6 +62,14 @@ class fu {
 		return $txt;
 	}
 
+	private static function out($str) {
+		if (PHP_SAPI === 'cli') {
+			echo $str . "\n";
+		} else {
+			echo "<div>"  . nl2br($str) . "</div>";
+		}
+	}
+
 	/**
 	 * Output a report. Currently only supports text output
 	 *
@@ -88,34 +96,34 @@ class fu {
 		$total_assert_counts = static::assert_counts();
 		$test_counts = static::test_counts();
 
-		echo "RESULTS:";
-		echo "--------------------------------------------\n";
+		fu::out("RESULTS:");
+		fu::out("--------------------------------------------");
 
 		foreach (static::$tests as $name => $tdata) {
 
 			$assert_counts = static::assert_counts($name);
 			$test_color = $assert_counts['pass'] === $assert_counts['total'] ? 'GREEN' : 'RED';
-			echo "TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):\n", $test_color);
+			fu::out("TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):", $test_color));
 
 			foreach ($tdata['assertions'] as $ass) {
 				$assert_color = $ass['result'] == static::PASS ? 'GREEN' : 'RED';
-				echo " * "
+				fu::out(" * "
 					. static::color("{$ass['result']}"
 					. " {$ass['func_name']}("
 					. implode(', ', $ass['func_args'])
-					. ") {$ass['msg']}\n", $assert_color);
+					. ") {$ass['msg']}", $assert_color));
 			}
-			echo "\n";
+			fu::out("");
 		}
 
-		echo "TOTAL ASSERTIONS: "
+		fu::out("TOTAL ASSERTIONS: "
 				. static::color("{$total_assert_counts['pass']} pass", 'GREEN') . ", "
 				. static::color("{$total_assert_counts['fail']} fail", 'RED') . ", "
-				. static::color("{$total_assert_counts['total']} total\n", 'WHITE');
+				. static::color("{$total_assert_counts['total']} total", 'WHITE'));
 
-		echo "TESTS: {$test_counts['run']} run, "
+		fu::out("TESTS: {$test_counts['run']} run, "
 				. static::color("{$test_counts['pass']} pass", 'GREEN') . ", "
-				. static::color("{$test_counts['total']} total\n", 'WHITE');
+				. static::color("{$test_counts['total']} total", 'WHITE'));
 	}
 
 	/**
@@ -167,7 +175,7 @@ class fu {
 	 * @see fu::test()
 	 */
 	public static function run_test($name) {
-		echo "Running test '{$name}...'\n";
+		fu::out("Running test '{$name}...'");
 
 		// to associate the assertions in a test with the test,
 		// we use this static var to avoid the need to for globals
