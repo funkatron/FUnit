@@ -24,6 +24,14 @@ fu::test("another test", function() {
 	// access a fixture
 	$foobar = fu::fixture('foobar');
 	fu::equal($foobar['foo'], 'bar', "the fixture 'foobar' should have a key 'foo' equal to 'baz'");
+
+	$fooarr = array('blam'=>'blaz');
+	fu::has('blam', $fooarr, "\$fooarr has a key named 'blam'");
+
+
+	$fooobj = new \StdClass;
+	$fooobj->blam = 'blaz';
+	fu::has('blam', $fooobj, "\$fooobj has a property named 'blam'");
 });
 
 fu::test('Forced failure', function() {

@@ -428,6 +428,25 @@ class fu {
 	}
 
 	/**
+	 * assert that $haystack has a key or property named $needle. If $haystack
+	 * is neither, returns false
+	 * @param string $needle the key or property to look for
+	 * @param array|object $haystack the array or object to test
+	 * @param string $msg optional description of assertion
+	 */
+	public static function has($needle, $haystack, $msg = null) {
+		var_dump($haystack);
+		if (is_object($haystack)) {
+			$rs = (bool)property_exists($haystack, $needle);
+		} elseif (is_array($haystack)) {
+			$rs = (bool)array_key_exists($needle, $haystack);
+		} else {
+			$rs = false;
+		}
+
+		static::add_assertion_result(__FUNCTION__, array($needle, $haystack), $rs, $msg);
+	}
+	/**
 	 * Force a failed assertion
 	 * @param string $msg optional description of assertion
 	 */
