@@ -435,7 +435,6 @@ class fu {
 	 * @param string $msg optional description of assertion
 	 */
 	public static function has($needle, $haystack, $msg = null) {
-		var_dump($haystack);
 		if (is_object($haystack)) {
 			$rs = (bool)property_exists($haystack, $needle);
 		} elseif (is_array($haystack)) {
