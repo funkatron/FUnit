@@ -110,7 +110,8 @@ class fu {
 				fu::out(" * "
 					. static::color("{$ass['result']}"
 					. " {$ass['func_name']}("
-					. implode(', ', $ass['func_args'])
+					// @TODO we should coerce these into strings and output only on fail
+					// . implode(', ', $ass['func_args'])
 					. ") {$ass['msg']}", $assert_color));
 			}
 			fu::out("");
