@@ -62,6 +62,10 @@ See the `example.php` file for more.
 
   Assert that $a !== $b. Optional $msg describes the test
 
+* `fu::has($needle, $haystack, $msg = null)`
+
+  Assert that an array or object (`$haystack`) has a key or property (`$needle`)
+
 * `fu::setup(\Closure $setup)`
 
   Register a function to run at the start of each test. See `fu::fixture()`
