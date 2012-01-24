@@ -27,7 +27,9 @@ class fu {
 
 	static $fixtures = array();
 
-	private static $TERM_COLORS = array(
+	static $errors = array();
+
+	protected static $TERM_COLORS = array(
 		'BLACK' => "30",
 		'RED' => "31",
 		'GREEN' => "32",
@@ -38,6 +40,79 @@ class fu {
 		'WHITE' => "37",
 		'DEFAULT' => "00",
 	);
+
+	/**
+	 * custom exception handler, massaging the format into the same we use for Errors
+	 *
+	 * We don't actually use this as a proper exception handler, so we can continue execution.
+	 *
+	 * @param Exception $e
+	 * @return array ['datetime', 'num', 'type', 'msg', 'file', 'line']
+	 * @see fu::run_test()
+	 */
+	protected static function exception_handler($e) {
+		$datetime = date("Y-m-d H:i:s (T)");
+		$num = 0;
+		$type = get_class($e);
+		$msg = $e->getMessage();
+		$file = $e->getFile();
+		$line = $e->getLine();
+
+		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line');
+
+		fu::add_error_data($edata);
+	}
+
+
+	/**
+	 * custom error handler to catch errors triggered while running tests. this is
+	 * registered at the start of fu::run() and deregistered at stop
+	 * @see fu::run()
+	 */
+	public static function error_handler($num, $msg, $file, $line, $vars) {
+
+		$datetime = date("Y-m-d H:i:s (T)");
+
+		$types = array (
+					E_ERROR              => 'Error',
+					E_WARNING            => 'Warning',
+					E_PARSE              => 'Parsing Error',
+					E_NOTICE             => 'Notice',
+					E_CORE_ERROR         => 'Core Error',
+					E_CORE_WARNING       => 'Core Warning',
+					E_COMPILE_ERROR      => 'Compile Error',
+					E_COMPILE_WARNING    => 'Compile Warning',
+					E_USER_ERROR         => 'User Error',
+					E_USER_WARNING       => 'User Warning',
+					E_USER_NOTICE        => 'User Notice',
+					E_STRICT             => 'Runtime Notice',
+					E_RECOVERABLE_ERROR  => 'Catchable Fatal Error'
+					);
+
+		$type = $types[$num];
+
+		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line');
+
+		fu::add_error_data($edata);
+	}
+
+	/**
+	 * adds error data to the main $errors var property and the current test's
+	 * error array
+	 * @param array $edata ['datetime', 'num', 'type', 'msg', 'file', 'line']
+	 * @see fu::$errors
+	 * @see fu::error_handler()
+	 * @see fu::exception_handler()
+	 */
+	protected static function add_error_data($edata) {
+
+		fu::$errors[] = $edata;
+
+		if (static::$current_test_name) {
+			static::$tests[static::$current_test_name]['errors'][] = $edata;
+		}
+	}
+
 
 	/**
 	 * Format a line for printing. Detects
@@ -51,7 +126,7 @@ class fu {
 	 * @param string $color default is 'DEFAULT'
 	 * @see fu::$TERM_COLORS
 	 */
-	private static function color($txt, $color='DEFAULT') {
+	protected static function color($txt, $color='DEFAULT') {
 		if (PHP_SAPI === 'cli') {
 			$color = static::$TERM_COLORS[$color];
 			$txt = chr(27) . "[0;{$color}m{$txt}" . chr(27) . "[00m";
@@ -62,7 +137,7 @@ class fu {
 		return $txt;
 	}
 
-	private static function out($str) {
+	protected static function out($str) {
 		if (PHP_SAPI === 'cli') {
 			echo $str . "\n";
 		} else {
@@ -92,7 +167,9 @@ class fu {
 	 * @see fu::report()
 	 * @see fu::run()
 	 */
-	public static function report_text() {
+	protected static function report_text() {
+
+
 		$total_assert_counts = static::assert_counts();
 		$test_counts = static::test_counts();
 
@@ -102,7 +179,7 @@ class fu {
 		foreach (static::$tests as $name => $tdata) {
 
 			$assert_counts = static::assert_counts($name);
-			$test_color = $assert_counts['pass'] === $assert_counts['total'] ? 'GREEN' : 'RED';
+			$test_color = $tdata['pass'] ? 'GREEN' : 'RED';
 			fu::out("TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):", $test_color));
 
 			foreach ($tdata['assertions'] as $ass) {
@@ -114,10 +191,23 @@ class fu {
 					// . implode(', ', $ass['func_args'])
 					. ") {$ass['msg']}", $assert_color));
 			}
+			if (count($tdata['errors']) > 0) {
+				foreach ($tdata['errors'] as $error) {
+					fu::out( " * " . static::color(strtoupper($error['type']) . ": {$error['msg']} in {$error['file']}#{$error['line']}", 'RED') );
+				}
+			}
+
 			fu::out("");
 		}
 
-		fu::out("TOTAL ASSERTIONS: "
+
+		$err_count = count($tdata['errors']);
+		$err_color = (count($tdata['errors']) > 0) ? 'RED' : 'WHITE';
+		fu::out("ERRORS/EXCEPTIONS: "
+			. static::color($err_count, $err_color) );
+
+
+		fu::out("ASSERTIONS: "
 				. static::color("{$total_assert_counts['pass']} pass", 'GREEN') . ", "
 				. static::color("{$total_assert_counts['fail']} fail", 'RED') . ", "
 				. static::color("{$total_assert_counts['total']} total", 'WHITE'));
@@ -134,12 +224,13 @@ class fu {
 	 * @param string $name the name of the test
 	 * @param Closure $test the function to execute for the test
 	 */
-	public static function add_test($name, \Closure $test) {
+	protected static function add_test($name, \Closure $test) {
 		static::$tests[$name] = array(
 			'run' => false,
 			'pass' => false,
 			'test' => $test,
 			'expected' => 0,
+			'errors' => array(),
 			'assertions' => array(),
 		);
 	}
@@ -159,7 +250,7 @@ class fu {
 	 * @see fu::strict_equal()
 	 * @see fu::not_strict_equal()
 	 */
-	public static function add_assertion_result($func_name, $func_args, $result, $msg = null) {
+	protected static function add_assertion_result($func_name, $func_args, $result, $msg = null) {
 		$result = ($result) ? static::PASS : static::FAIL;
 		static::$tests[static::$current_test_name]['assertions'][] = compact('func_name', 'func_args', 'result', 'msg');
 	}
@@ -175,7 +266,7 @@ class fu {
 	 * @see fu::teardown()
 	 * @see fu::test()
 	 */
-	public static function run_test($name) {
+	protected static function run_test($name) {
 		fu::out("Running test '{$name}...'");
 
 		// to associate the assertions in a test with the test,
@@ -183,14 +274,24 @@ class fu {
 		static::$current_test_name = $name;
 		$test = static::$tests[$name]['test'];
 
+		// setup
 		if (isset(static::$setup_func)) {
 			$setup_func = static::$setup_func;
 			$setup_func();
 			unset($setup_func);
 		}
 
-		$test();
+		try {
 
+			$test();
+
+		} catch(\Exception $e) {
+
+			static::exception_handler($e);
+
+		}
+
+		// teardown
 		if (isset(static::$teardown_func)) {
 			$teardown_func = static::$teardown_func;
 			$teardown_func();
@@ -200,12 +301,22 @@ class fu {
 		static::$current_test_name = null;
 		static::$tests[$name]['run'] = true;
 
-		$assert_counts = static::assert_counts($name);
-		if ($assert_counts['pass'] === $assert_counts['total']) {
-			static::$tests[$name]['pass'] = true;
-		} else {
+		if (count(static::$tests[$name]['errors']) > 0) {
+
 			static::$tests[$name]['pass'] = false;
+
+		} else {
+
+			$assert_counts = static::assert_counts($name);
+			if ($assert_counts['pass'] === $assert_counts['total']) {
+				static::$tests[$name]['pass'] = true;
+			} else {
+				static::$tests[$name]['pass'] = false;
+			}
 		}
+
+		return static::$tests[$name];
+
 	}
 
 	/**
@@ -232,7 +343,7 @@ class fu {
 	 * @param string $test_name optional the name of the test about which to get assertion stats
 	 * @return array has keys 'total', 'pass', 'fail'
 	 */
-	public static function assert_counts($test_name = null) {
+	protected static function assert_counts($test_name = null) {
 
 		$total = 0;
 		$pass  = 0;
@@ -285,7 +396,7 @@ class fu {
 	 * @param string $test_name optional the name of the test about which to get assertion stats
 	 * @return array has keys 'total', 'pass', 'run'
 	 */
-	public static function test_counts() {
+	protected static function test_counts() {
 		$total = count(static::$tests);
 		$run = 0;
 		$pass = 0;
@@ -461,9 +572,19 @@ class fu {
 	 * @see fu::report()
 	 */
 	public static function run($report = true) {
+
+		// set handlers
+		$old_error_handler = set_error_handler('\FUnit\fu::error_handler');
+
 		static::run_tests();
 		if ($report) { static::report(); }
+
+		// restore handlers
+		if ($old_error_handler) {
+			set_error_handler($old_error_handler);
+		}
 	}
+
 	/**
 	 * @TODO
 	 */

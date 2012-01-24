@@ -38,6 +38,17 @@ fu::test('Forced failure', function() {
 	fu::fail('Here we can describe a missing test!');
 });
 
+
+fu::test('Forced Errors/Exception', function() {
+
+	trigger_error('This was triggered inside a test', E_USER_ERROR);
+
+	trigger_error('This was triggered inside a test', E_USER_NOTICE);
+
+	throw new Exception('This was thrown inside a test');
+});
+
+
 fu::run();
 
 // this should output an empty array, because our fixtures will be gone
