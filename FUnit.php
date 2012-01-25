@@ -186,13 +186,17 @@ class fu {
 			fu::out("TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):", $test_color));
 
 			foreach ($tdata['assertions'] as $ass) {
-				$assert_color = $ass['result'] == static::PASS ? 'GREEN' : 'RED';
+				if ($ass['expected_fail']) {
+					$assert_color = 'YELLOW';
+				} else {
+					$assert_color = $ass['result'] == static::PASS ? 'GREEN' : 'RED';
+				}
 				fu::out(" * "
 					. static::color("{$ass['result']}"
 					. " {$ass['func_name']}("
 					// @TODO we should coerce these into strings and output only on fail
 					// . implode(', ', $ass['func_args'])
-					. ") {$ass['msg']}", $assert_color));
+					. ") {$ass['msg']}" . ($ass['expected_fail']? ' (expected)' : ''), $assert_color));
 			}
 			if (count($tdata['errors']) > 0) {
 				foreach ($tdata['errors'] as $error) {
