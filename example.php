@@ -35,7 +35,12 @@ fu::test("another test", function() {
 });
 
 fu::test('Forced failure', function() {
-	fu::fail('Here we can describe a missing test!');
+	fu::fail('This is a forced fail');
+});
+
+
+fu::test('Expected failure', function() {
+	fu::fail('This is a good place to describe a missing test', true);
 });
 
 

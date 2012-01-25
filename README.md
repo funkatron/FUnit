@@ -31,7 +31,8 @@ Will output:
 	 * PASS ok() the integer '1' is okay
 	 * FAIL ok() the integer '0' is not okay
 
-	TOTAL ASSERTIONS: 1 pass, 1 fail, 2 total
+	ERRORS/EXCEPTIONS: 0
+	TOTAL ASSERTIONS: 1 pass, 1 fail, 0 expected fail, 2 total
 	TESTS: 1 run, 0 pass, 1 total
 
 See the `example.php` file for more.
@@ -59,6 +60,9 @@ See the `example.php` file for more.
 
 * `fu::has($needle, $haystack, $msg = null)`    
   Assert that an array or object (`$haystack`) has a key or property (`$needle`)
+
+* `fu::fail($msg = null, [$expected = null])`    
+  Force a failed assertion. If `$expected === true`, it's marked as an *expected failure*
 
 * `fu::setup(\Closure $setup)`    
   Register a function to run at the start of each test. See `fu::fixture()`
