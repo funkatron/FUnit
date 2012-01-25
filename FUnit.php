@@ -117,7 +117,7 @@ class fu {
 	/**
 	 * Format a line for printing. Detects
 	 * if the script is being run from the command
-	 * line or from a browser.
+	 * line or from a browser; also detects TTY for color (so pipes work).
 	 *
 	 * Colouring code loosely based on
 	 * http://www.zend.com//code/codex.php?ozid=1112&single=1
@@ -128,8 +128,12 @@ class fu {
 	 */
 	protected static function color($txt, $color='DEFAULT') {
 		if (PHP_SAPI === 'cli') {
-			$color = static::$TERM_COLORS[$color];
-			$txt = chr(27) . "[0;{$color}m{$txt}" . chr(27) . "[00m";
+			// only color if output is a posix TTY
+			if (function_exists('posix_isatty') && posix_isatty(STDOUT)) {
+				$color = static::$TERM_COLORS[$color];
+				$txt = chr(27) . "[0;{$color}m{$txt}" . chr(27) . "[00m";
+			}
+			// otherwise, don't touch $txt
 		} else {
 			$color = strtolower($color);
 			$txt = "<span style=\"color: $color;\">$txt</span>";
