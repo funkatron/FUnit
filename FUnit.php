@@ -182,7 +182,15 @@ class fu {
 		foreach (static::$tests as $name => $tdata) {
 
 			$assert_counts = static::assert_counts($name);
-			$test_color = $tdata['pass'] ? 'GREEN' : 'RED';
+			if ($tdata['pass']) {
+				$test_color = 'GREEN';
+			} else {
+				if (($assert_counts['total'] - $assert_counts['expected_fail']) == $assert_counts['pass']) {
+					$test_color = 'YELLOW';
+				} else {
+					$test_color = 'RED';
+				}
+			}
 			fu::out("TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):", $test_color));
 
 			foreach ($tdata['assertions'] as $ass) {
