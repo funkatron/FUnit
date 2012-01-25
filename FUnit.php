@@ -14,7 +14,6 @@ class fu {
 	 * 		'run'=>false,
 	 * 		'pass'=>false,
 	 * 		'test'=>null,
-	 * 		'expected'=>0,
 	 * 		'assertions'=>array('func_name'=>'foo', 'func_args'=array('a','b'), 'result'=>$result, 'msg'=>'blahblah'),
 	 */
 	static $tests = array();
@@ -183,17 +182,29 @@ class fu {
 		foreach (static::$tests as $name => $tdata) {
 
 			$assert_counts = static::assert_counts($name);
-			$test_color = $tdata['pass'] ? 'GREEN' : 'RED';
+			if ($tdata['pass']) {
+				$test_color = 'GREEN';
+			} else {
+				if (($assert_counts['total'] - $assert_counts['expected_fail']) == $assert_counts['pass']) {
+					$test_color = 'YELLOW';
+				} else {
+					$test_color = 'RED';
+				}
+			}
 			fu::out("TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):", $test_color));
 
 			foreach ($tdata['assertions'] as $ass) {
-				$assert_color = $ass['result'] == static::PASS ? 'GREEN' : 'RED';
+				if ($ass['expected_fail']) {
+					$assert_color = 'YELLOW';
+				} else {
+					$assert_color = $ass['result'] == static::PASS ? 'GREEN' : 'RED';
+				}
 				fu::out(" * "
 					. static::color("{$ass['result']}"
 					. " {$ass['func_name']}("
 					// @TODO we should coerce these into strings and output only on fail
 					// . implode(', ', $ass['func_args'])
-					. ") {$ass['msg']}", $assert_color));
+					. ") {$ass['msg']}" . ($ass['expected_fail']? ' (expected)' : ''), $assert_color));
 			}
 			if (count($tdata['errors']) > 0) {
 				foreach ($tdata['errors'] as $error) {
@@ -214,6 +225,7 @@ class fu {
 		fu::out("ASSERTIONS: "
 				. static::color("{$total_assert_counts['pass']} pass", 'GREEN') . ", "
 				. static::color("{$total_assert_counts['fail']} fail", 'RED') . ", "
+				. static::color("{$total_assert_counts['expected_fail']} expected fail", 'YELLOW') . ", "
 				. static::color("{$total_assert_counts['total']} total", 'WHITE'));
 
 		fu::out("TESTS: {$test_counts['run']} run, "
@@ -233,7 +245,6 @@ class fu {
 			'run' => false,
 			'pass' => false,
 			'test' => $test,
-			'expected' => 0,
 			'errors' => array(),
 			'assertions' => array(),
 		);
@@ -248,15 +259,16 @@ class fu {
 	 * @param array $func_args the arguments for the assertion. Really just the $a (actual) and $b (expected)
 	 * @param mixed $result this is expected to be truthy or falsy, and is converted into fu::PASS or fu::FAIL
 	 * @param string $msg optional message describing the assertion
+	 * @param bool $expected_fail optional expectation of the assertion to fail
 	 * @see fu::ok()
 	 * @see fu::equal()
 	 * @see fu::not_equal()
 	 * @see fu::strict_equal()
 	 * @see fu::not_strict_equal()
 	 */
-	protected static function add_assertion_result($func_name, $func_args, $result, $msg = null) {
+	protected static function add_assertion_result($func_name, $func_args, $result, $msg = null, $expected_fail = false) {
 		$result = ($result) ? static::PASS : static::FAIL;
-		static::$tests[static::$current_test_name]['assertions'][] = compact('func_name', 'func_args', 'result', 'msg');
+		static::$tests[static::$current_test_name]['assertions'][] = compact('func_name', 'func_args', 'result', 'msg', 'expected_fail');
 	}
 
 	/**
@@ -340,35 +352,40 @@ class fu {
 	/**
 	 * Normally you would not call this method directly
 	 *
-	 * Retrieves stats about assertions run. returns an array with the keys 'total', 'pass', 'fail'
+	 * Retrieves stats about assertions run. returns an array with the keys 'total', 'pass', 'fail', 'expected_fail'
 	 *
 	 * If called without passing a test name, retrieves info about all assertions. Else just for the named test
 	 *
 	 * @param string $test_name optional the name of the test about which to get assertion stats
-	 * @return array has keys 'total', 'pass', 'fail'
+	 * @return array has keys 'total', 'pass', 'fail', 'expected_fail'
 	 */
 	protected static function assert_counts($test_name = null) {
 
 		$total = 0;
 		$pass  = 0;
 		$fail  = 0;
+		$expected_fail = 0;
 
 		$test_asserts = function($test_name, $assertions) {
 
 			$total = 0;
 			$pass  = 0;
 			$fail  = 0;
+			$expected_fail = 0;
 
 			foreach ($assertions as $ass) {
 				if ($ass['result'] === fu::PASS) {
 					$pass++;
 				} elseif ($ass['result'] === fu::FAIL) {
 					$fail++;
+					if ($ass['expected_fail']) {
+						$expected_fail++;
+					}
 				}
 				$total++;
 			}
 
-			return compact('total', 'pass', 'fail');
+			return compact('total', 'pass', 'fail', 'expected_fail');
 
 		};
 
@@ -378,6 +395,7 @@ class fu {
 			$total += $rs['total'];
 			$pass += $rs['pass'];
 			$fail += $rs['fail'];
+			$expected_fail += $rs['expected_fail'];
 		} else {
 			foreach (static::$tests as $test_name => $tdata) {
 				$assertions = static::$tests[$test_name]['assertions'];
@@ -385,10 +403,11 @@ class fu {
 				$total += $rs['total'];
 				$pass += $rs['pass'];
 				$fail += $rs['fail'];
+				$expected_fail += $rs['expected_fail'];
 			}
 		}
 
-		return compact('total', 'pass', 'fail');
+		return compact('total', 'pass', 'fail', 'expected_fail');
 
 	}
 
@@ -563,9 +582,20 @@ class fu {
 	/**
 	 * Force a failed assertion
 	 * @param string $msg optional description of assertion
+	 * @param bool $exptected optionally expect this test to fail
 	 */
-	public static function fail($msg = null) {
-		static::add_assertion_result(__FUNCTION__, array(), false, $msg);
+	public static function fail($msg = null, $expected = false) {
+		static::add_assertion_result(__FUNCTION__, array(), false, $msg, $expected);
+	}
+
+	/**
+	 * Fail an assertion in an expected way
+	 * @param string $msg optional description of assertion
+	 * @param bool $exptected optionally expect this test to fail
+	 * @see fu::fail()
+	 */
+	public static function expect_fail($msg = null) {
+		return static::fail($msg, true);
 	}
 
 	/**
