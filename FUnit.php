@@ -365,13 +365,15 @@ class fu {
 	 * Normally you would not call this method directly
 	 *
 	 * Run all of the registered tests
-	 *
+	 * @param string $filter optional test case name filter
 	 * @see fu::run()
 	 * @see fu::run_test()
 	 */
-	public static function run_tests() {
+	public static function run_tests($filter = null) {
 		foreach (static::$tests as $name => &$test) {
-			static::run_test($name);
+			if (null === $filter || (stripos($name, $filter) !== false)) {
+				static::run_test($name);
+			}
 		}
 	}
 
@@ -646,15 +648,16 @@ class fu {
 	 * Run the registered tests, and output a report
 	 *
 	 * @param boolean $report whether or not to output a report after tests run. Default true.
+	 * @param string $filter optional test case name filter
 	 * @see fu::run_tests()
 	 * @see fu::report()
 	 */
-	public static function run($report = true) {
+	public static function run($report = true, $filter = null) {
 
 		// set handlers
 		$old_error_handler = set_error_handler('\FUnit\fu::error_handler');
 
-		static::run_tests();
+		static::run_tests($filter);
 		if ($report) { static::report(); }
 
 		// restore handlers
