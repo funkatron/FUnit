@@ -10,11 +10,18 @@ class fu {
 	const FAIL = 'FAIL';
 
 	/**
+	 * debug mode
+	 */
+	public static $DEBUG = false;
+	public static $DEBUG_COLOR = 'BLUE';
+
+	/**
 	 * $tests['name'] => array(
 	 * 		'run'=>false,
 	 * 		'pass'=>false,
 	 * 		'test'=>null,
 	 * 		'assertions'=>array('func_name'=>'foo', 'func_args'=array('a','b'), 'result'=>$result, 'msg'=>'blahblah'),
+	 * 		'timing' => array('setup'=>ts, 'run'=>ts, 'teardown'=>ts, 'total'=ts),
 	 */
 	static $tests = array();
 
@@ -146,6 +153,13 @@ class fu {
 		} else {
 			echo "<div>"  . nl2br($str) . "</div>";
 		}
+	}
+
+	protected static function debug_out($str) {
+		if (!static::$DEBUG) {
+			return;
+		}
+		static::out(static::color($str, static::$DEBUG_COLOR));
 	}
 
 	/**
@@ -284,6 +298,7 @@ class fu {
 	 */
 	protected static function run_test($name) {
 		fu::out("Running test '{$name}...'");
+		$ts_start = microtime(true);
 
 		// to associate the assertions in a test with the test,
 		// we use this static var to avoid the need to for globals
@@ -296,6 +311,7 @@ class fu {
 			$setup_func();
 			unset($setup_func);
 		}
+		$ts_setup = microtime(true);
 
 		try {
 
@@ -306,6 +322,7 @@ class fu {
 			static::exception_handler($e);
 
 		}
+		$ts_run = microtime(true);
 
 		// teardown
 		if (isset(static::$teardown_func)) {
@@ -313,9 +330,16 @@ class fu {
 			$teardown_func();
 			unset($teardown_func);
 		}
+		$ts_teardown = microtime(true);
 
 		static::$current_test_name = null;
 		static::$tests[$name]['run'] = true;
+		static::$tests[$name]['timing'] = array(
+			'setup' => $ts_setup - $ts_start,
+			'run' => $ts_run - $ts_setup,
+			'teardown' => $ts_teardown - $ts_run,
+			'total' => $ts_teardown - $ts_start,
+		);
 
 		if (count(static::$tests[$name]['errors']) > 0) {
 
@@ -331,6 +355,8 @@ class fu {
 			}
 		}
 
+		static::debug_out("Timing: " . json_encode(static::$tests[$name]['timing'])); // json is easy to read
+
 		return static::$tests[$name];
 
 	}
@@ -339,13 +365,15 @@ class fu {
 	 * Normally you would not call this method directly
 	 *
 	 * Run all of the registered tests
-	 *
+	 * @param string $filter optional test case name filter
 	 * @see fu::run()
 	 * @see fu::run_test()
 	 */
-	public static function run_tests() {
+	public static function run_tests($filter = null) {
 		foreach (static::$tests as $name => &$test) {
-			static::run_test($name);
+			if (null === $filter || (stripos($name, $filter) !== false)) {
+				static::run_test($name);
+			}
 		}
 	}
 
@@ -513,6 +541,9 @@ class fu {
 	public static function equal($a, $b, $msg = null) {
 		$rs = ($a == $b);
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
+		if (!$rs) {
+			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be loosely equal');
+		}
 	}
 
 	/**
@@ -525,6 +556,9 @@ class fu {
 	public static function not_equal($a, $b, $msg = null) {
 		$rs = ($a != $b);
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
+		if (!$rs) {
+			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be unequal');
+		}
 	}
 
 	/**
@@ -537,6 +571,9 @@ class fu {
 	public static function strict_equal($a, $b, $msg = null) {
 		$rs = ($a === $b);
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
+		if (!$rs) {
+			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be strictly equal');
+		}
 	}
 
 	/**
@@ -549,6 +586,9 @@ class fu {
 	public static function not_strict_equal($a, $b, $msg = null) {
 		$rs = ($a !== $b);
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
+		if (!$rs) {
+			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be strictly unequal');
+		}
 	}
 
 	/**
@@ -559,6 +599,9 @@ class fu {
 	public static function ok($a, $msg = null) {
 		$rs = (bool)$a;
 		static::add_assertion_result(__FUNCTION__, array($a), $rs, $msg);
+		if (!$rs) {
+			static::debug_out('Expected: ' . var_export($a, true) . ' to be truthy');
+		}
 	}
 
 	/**
@@ -578,6 +621,9 @@ class fu {
 		}
 
 		static::add_assertion_result(__FUNCTION__, array($needle, $haystack), $rs, $msg);
+		if (!$rs) {
+			static::debug_out('Expected: ' . var_export($haystack, true) . ' to contain ' . var_export($needle, true));
+		}
 	}
 	/**
 	 * Force a failed assertion
@@ -602,15 +648,16 @@ class fu {
 	 * Run the registered tests, and output a report
 	 *
 	 * @param boolean $report whether or not to output a report after tests run. Default true.
+	 * @param string $filter optional test case name filter
 	 * @see fu::run_tests()
 	 * @see fu::report()
 	 */
-	public static function run($report = true) {
+	public static function run($report = true, $filter = null) {
 
 		// set handlers
 		$old_error_handler = set_error_handler('\FUnit\fu::error_handler');
 
-		static::run_tests();
+		static::run_tests($filter);
 		if ($report) { static::report(); }
 
 		// restore handlers
