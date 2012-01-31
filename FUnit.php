@@ -97,7 +97,22 @@ class fu {
 
 		$type = $types[$num];
 
-		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line');
+		$backtrace = array();
+		foreach (debug_backtrace() as $bt) {
+			if (isset($bt['function']) && __FUNCTION__ == $bt['function'] && isset($bt['class']) && __CLASS__ == $bt['class']) {
+				continue; // don't bother backtracing
+			}
+			$trace = $bt['file'] . '#' . $bt['line'];
+			if (isset($bt['class']) && isset($bt['function'])) {
+				$trace .= " {$bt['class']}::{$bt['function']}(...)";
+			} elseif (isset($bt['function'])) {
+				$trace .= " {$bt['function']}(...)";
+			}
+			$backtrace[] = $trace;
+
+		}
+
+		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line', 'backtrace');
 
 		fu::add_error_data($edata);
 	}
@@ -222,7 +237,17 @@ class fu {
 			}
 			if (count($tdata['errors']) > 0) {
 				foreach ($tdata['errors'] as $error) {
-					fu::out( " * " . static::color(strtoupper($error['type']) . ": {$error['msg']} in {$error['file']}#{$error['line']}", 'RED') );
+					if (static::$DEBUG) {
+						$sep = "\n  -> ";
+						$bt = $sep . implode($sep, $error['backtrace']);
+					} else {
+						$bt = "{$error['file']}#{$error['line']}{$bt}";
+					}
+					fu::out(
+						' * ' . static::color(
+							strtoupper($error['type']) . ": {$error['msg']} in {$bt}",
+							'RED')
+					);
 				}
 			}
 
