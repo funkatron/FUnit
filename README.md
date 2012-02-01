@@ -64,6 +64,9 @@ See the `example.php` file for more.
 * `fu::fail($msg = null, [$expected = null])`    
   Force a failed assertion. If `$expected === true`, it's marked as an *expected failure*
 
+* `fu::expect_fail($msg = null)`    
+  Assets an *expected failure.* Equivalent to `fu::fail('msg', true)`
+
 * `fu::setup(\Closure $setup)`    
   Register a function to run at the start of each test. See `fu::fixture()`
 
