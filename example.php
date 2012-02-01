@@ -40,7 +40,7 @@ fu::test('Forced failure', function() {
 
 
 fu::test('Expected failure', function() {
-	fu::fail('This is a good place to describe a missing test', true);
+	fu::expect_fail('This is a good place to describe a missing test');
 });
 
 
