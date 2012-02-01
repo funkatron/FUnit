@@ -97,7 +97,22 @@ class fu {
 
 		$type = $types[$num];
 
-		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line');
+		$backtrace = array();
+		foreach (debug_backtrace() as $bt) {
+			if (isset($bt['function']) && __FUNCTION__ == $bt['function'] && isset($bt['class']) && __CLASS__ == $bt['class']) {
+				continue; // don't bother backtracing
+			}
+			$trace = $bt['file'] . '#' . $bt['line'];
+			if (isset($bt['class']) && isset($bt['function'])) {
+				$trace .= " {$bt['class']}::{$bt['function']}(...)";
+			} elseif (isset($bt['function'])) {
+				$trace .= " {$bt['function']}(...)";
+			}
+			$backtrace[] = $trace;
+
+		}
+
+		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line', 'backtrace');
 
 		fu::add_error_data($edata);
 	}
@@ -222,7 +237,17 @@ class fu {
 			}
 			if (count($tdata['errors']) > 0) {
 				foreach ($tdata['errors'] as $error) {
-					fu::out( " * " . static::color(strtoupper($error['type']) . ": {$error['msg']} in {$error['file']}#{$error['line']}", 'RED') );
+					if (static::$DEBUG) {
+						$sep = "\n  -> ";
+						$bt = $sep . implode($sep, $error['backtrace']);
+					} else {
+						$bt = "{$error['file']}#{$error['line']}{$bt}";
+					}
+					fu::out(
+						' * ' . static::color(
+							strtoupper($error['type']) . ": {$error['msg']} in {$bt}",
+							'RED')
+					);
 				}
 			}
 
@@ -544,6 +569,7 @@ class fu {
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be loosely equal');
 		}
+		return $rs;
 	}
 
 	/**
@@ -559,6 +585,7 @@ class fu {
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be unequal');
 		}
+		return $rs;
 	}
 
 	/**
@@ -574,6 +601,7 @@ class fu {
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be strictly equal');
 		}
+		return $rs;
 	}
 
 	/**
@@ -589,6 +617,7 @@ class fu {
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be strictly unequal');
 		}
+		return $rs;
 	}
 
 	/**
@@ -602,6 +631,7 @@ class fu {
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) . ' to be truthy');
 		}
+		return $rs;
 	}
 
 	/**
@@ -624,6 +654,7 @@ class fu {
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($haystack, true) . ' to contain ' . var_export($needle, true));
 		}
+		return $rs;
 	}
 	/**
 	 * Force a failed assertion
@@ -632,6 +663,7 @@ class fu {
 	 */
 	public static function fail($msg = null, $expected = false) {
 		static::add_assertion_result(__FUNCTION__, array(), false, $msg, $expected);
+		return false;
 	}
 
 	/**
@@ -642,6 +674,7 @@ class fu {
 	 */
 	public static function expect_fail($msg = null) {
 		return static::fail($msg, true);
+		return false;
 	}
 
 	/**
