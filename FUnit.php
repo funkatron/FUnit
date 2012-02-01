@@ -674,7 +674,6 @@ class fu {
 	 */
 	public static function expect_fail($msg = null) {
 		return static::fail($msg, true);
-		return false;
 	}
 
 	/**
