@@ -103,7 +103,11 @@ class FUnit {
 			if (isset($bt['function']) && __FUNCTION__ == $bt['function'] && isset($bt['class']) && __CLASS__ == $bt['class']) {
 				continue; // don't bother backtracing
 			}
-			$trace = $bt['file'] . '#' . $bt['line'];
+			if (isset($bt['file'], $bt['line'])) {
+				$trace = $bt['file'] . '#' . $bt['line'];
+			} else {
+				$trace = '';
+			}
 			if (isset($bt['class']) && isset($bt['function'])) {
 				$trace .= " {$bt['class']}::{$bt['function']}(...)";
 			} elseif (isset($bt['function'])) {
