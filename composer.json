@@ -1,0 +1,17 @@
+{
+	"name": "funkatron/funit",
+	"description": "A simple test suite for PHP 5.3+, partially inspired by QUnit.",
+	"homepage": "http://github.com/funkatron/FUnit",
+	"license": "Apache 2.0",
+	"keywords": ["test", "unit"],
+	"authors": [
+		{
+			"name": "Ed Finkler",
+			"homepage": "http://funkatron.com"
+		}
+	],
+	"require": {
+		"php": ">=5.3"
+	},
+	"type": "library"
+}
