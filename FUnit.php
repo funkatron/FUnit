@@ -637,6 +637,40 @@ class fu {
 	}
 
 	/**
+	 * assert that $callback throws an exception of type $exception
+	 *
+	 * If $params is an array, it is passed as arguments to the callback.
+	 * Otherwise, it is assumed no arguments need to be passed.
+	 *
+	 * @param callable $callback Callback that should throw an exception
+	 * @param array $params Callback that should throw an exception
+	 * @param string $exception The exception class that should be thrown
+	 * @param string $msg
+	 * @return bool
+	 */
+	public static function throws(callable $callback, $params, $exception = null, $msg = null) {
+		if (is_array($params)) {
+			$exception = $exception ?: 'Exception';
+		} else {
+			$msg = $exception;
+			$exception = $params;
+			$params = array();
+		}
+		try {
+			call_user_func_array($callback, $params);
+			$rs = false;
+		} catch (\Exception $e) {
+			$rs = $e instanceof $exception;
+		}
+		static::add_assertion_result(__FUNCTION__, array($callback, $exception), $rs, $msg);
+		if (!$rs) {
+			$txt = isset($e) ? 'got ' . get_class($e) : 'no exception thrown';
+			static::debug_out('Expected exception ' . $exception . ', but ' . $txt);
+		}
+		return $rs;
+	}
+
+	/**
 	 * assert that $haystack has a key or property named $needle. If $haystack
 	 * is neither, returns false
 	 * @param string $needle the key or property to look for
