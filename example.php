@@ -34,6 +34,14 @@ fu::test("another test", function() {
 	fu::has('blam', $fooobj, "\$fooobj has a property named 'blam'");
 });
 
+fu::test('Checking for exceptions', function() {
+	$callback = function() { throw new RuntimeException(); };
+	fu::throws($callback, 'RuntimeException', 'Correct exception');
+
+	$callback = function($foo) { throw new RuntimeException($foo); };
+	fu::throws($callback, array('bar'), 'LogicException', 'Not the correct exception');
+});
+
 fu::test('Forced failure', function() {
 	fu::fail('This is a forced fail');
 });
