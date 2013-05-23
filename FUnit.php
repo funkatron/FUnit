@@ -37,6 +37,8 @@ class fu {
 
 	static $errors = array();
 
+	static $exit_code = 0;
+
 	protected static $TERM_COLORS = array(
 		'BLACK' => "30",
 		'RED' => "31",
@@ -380,6 +382,10 @@ class fu {
 			} else {
 				static::$tests[$name]['pass'] = false;
 			}
+		}
+
+		if(false === static::$tests[$name]['pass']){
+			static::$exit_code = 1;
 		}
 
 		static::debug_out("Timing: " . json_encode(static::$tests[$name]['timing'])); // json is easy to read
@@ -732,6 +738,9 @@ class fu {
 		if ($old_error_handler) {
 			set_error_handler($old_error_handler);
 		}
+
+		return static::$exit_code;
+
 	}
 
 	/**

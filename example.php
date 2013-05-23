@@ -62,7 +62,9 @@ fu::test('Forced Errors/Exception', function() {
 });
 
 
-fu::run();
+$exit = fu::run();
 
 // this should output an empty array, because our fixtures will be gone
 var_dump(fu::$fixtures);
+
+exit($exit);
