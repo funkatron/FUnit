@@ -13,5 +13,8 @@
 	"require": {
 		"php": ">=5.3"
 	},
-	"type": "library"
+	"type": "library",
+	"autoload": {
+		"psr-0": { "FUnit": "" }
+	}
 }
