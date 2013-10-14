@@ -1,11 +1,8 @@
 <?php
 
-namespace FUnit;
+class FUnit {
 
-
-class fu {
-
-	const VERSION = '0.4';
+	const VERSION = '0.5';
 
 	const PASS = 'PASS';
 
@@ -58,7 +55,7 @@ class fu {
 	 *
 	 * @param Exception $e
 	 * @return array ['datetime', 'num', 'type', 'msg', 'file', 'line']
-	 * @see fu::run_test()
+	 * @see FUnit::run_test()
 	 */
 	protected static function exception_handler($e) {
 		$datetime = date("Y-m-d H:i:s (T)");
@@ -70,14 +67,14 @@ class fu {
 
 		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line');
 
-		fu::add_error_data($edata);
+		FUnit::add_error_data($edata);
 	}
 
 
 	/**
 	 * custom error handler to catch errors triggered while running tests. this is
-	 * registered at the start of fu::run() and deregistered at stop
-	 * @see fu::run()
+	 * registered at the start of FUnit::run() and deregistered at stop
+	 * @see FUnit::run()
 	 */
 	public static function error_handler($num, $msg, $file, $line, $vars) {
 
@@ -118,20 +115,20 @@ class fu {
 
 		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line', 'backtrace');
 
-		fu::add_error_data($edata);
+		FUnit::add_error_data($edata);
 	}
 
 	/**
 	 * adds error data to the main $errors var property and the current test's
 	 * error array
 	 * @param array $edata ['datetime', 'num', 'type', 'msg', 'file', 'line']
-	 * @see fu::$errors
-	 * @see fu::error_handler()
-	 * @see fu::exception_handler()
+	 * @see FUnit::$errors
+	 * @see FUnit::error_handler()
+	 * @see FUnit::exception_handler()
 	 */
 	protected static function add_error_data($edata) {
 
-		fu::$errors[] = $edata;
+		FUnit::$errors[] = $edata;
 
 		if (static::$current_test_name) {
 			static::$tests[static::$current_test_name]['errors'][] = $edata;
@@ -149,7 +146,7 @@ class fu {
 	 *
 	 * @param string $line
 	 * @param string $color default is 'DEFAULT'
-	 * @see fu::$TERM_COLORS
+	 * @see FUnit::$TERM_COLORS
 	 */
 	protected static function color($txt, $color='DEFAULT') {
 		if (PHP_SAPI === 'cli') {
@@ -185,7 +182,7 @@ class fu {
 	 * Output a report. Currently only supports text output
 	 *
 	 * @param string $format default is 'text'
-	 * @see fu::report_text()
+	 * @see FUnit::report_text()
 	 */
 	public static function report($format = 'text') {
 		switch($format) {
@@ -200,8 +197,8 @@ class fu {
 	 *
 	 * Normally you would not call this method directly
 	 *
-	 * @see fu::report()
-	 * @see fu::run()
+	 * @see FUnit::report()
+	 * @see FUnit::run()
 	 */
 	protected static function report_text() {
 
@@ -209,8 +206,8 @@ class fu {
 		$total_assert_counts = static::assert_counts();
 		$test_counts = static::test_counts();
 
-		fu::out("RESULTS:");
-		fu::out("--------------------------------------------");
+		FUnit::out("RESULTS:");
+		FUnit::out("--------------------------------------------");
 
 		foreach (static::$tests as $name => $tdata) {
 
@@ -224,7 +221,7 @@ class fu {
 					$test_color = 'RED';
 				}
 			}
-			fu::out("TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):", $test_color));
+			FUnit::out("TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):", $test_color));
 
 			foreach ($tdata['assertions'] as $ass) {
 				if ($ass['expected_fail']) {
@@ -232,7 +229,7 @@ class fu {
 				} else {
 					$assert_color = $ass['result'] == static::PASS ? 'GREEN' : 'RED';
 				}
-				fu::out(" * "
+				FUnit::out(" * "
 					. static::color("{$ass['result']}"
 					. " {$ass['func_name']}("
 					// @TODO we should coerce these into strings and output only on fail
@@ -247,7 +244,7 @@ class fu {
 					} else {
 						$bt = "{$error['file']}#{$error['line']}{$bt}";
 					}
-					fu::out(
+					FUnit::out(
 						' * ' . static::color(
 							strtoupper($error['type']) . ": {$error['msg']} in {$bt}",
 							'RED')
@@ -255,23 +252,23 @@ class fu {
 				}
 			}
 
-			fu::out("");
+			FUnit::out("");
 		}
 
 
 		$err_count = count($tdata['errors']);
 		$err_color = (count($tdata['errors']) > 0) ? 'RED' : 'WHITE';
-		fu::out("ERRORS/EXCEPTIONS: "
+		FUnit::out("ERRORS/EXCEPTIONS: "
 			. static::color($err_count, $err_color) );
 
 
-		fu::out("ASSERTIONS: "
+		FUnit::out("ASSERTIONS: "
 				. static::color("{$total_assert_counts['pass']} pass", 'GREEN') . ", "
 				. static::color("{$total_assert_counts['fail']} fail", 'RED') . ", "
 				. static::color("{$total_assert_counts['expected_fail']} expected fail", 'YELLOW') . ", "
 				. static::color("{$total_assert_counts['total']} total", 'WHITE'));
 
-		fu::out("TESTS: {$test_counts['run']} run, "
+		FUnit::out("TESTS: {$test_counts['run']} run, "
 				. static::color("{$test_counts['pass']} pass", 'GREEN') . ", "
 				. static::color("{$test_counts['total']} total", 'WHITE'));
 	}
@@ -300,14 +297,14 @@ class fu {
 	 *
 	 * @param string $func_name the name of the assertion function
 	 * @param array $func_args the arguments for the assertion. Really just the $a (actual) and $b (expected)
-	 * @param mixed $result this is expected to be truthy or falsy, and is converted into fu::PASS or fu::FAIL
+	 * @param mixed $result this is expected to be truthy or falsy, and is converted into FUnit::PASS or FUnit::FAIL
 	 * @param string $msg optional message describing the assertion
 	 * @param bool $expected_fail optional expectation of the assertion to fail
-	 * @see fu::ok()
-	 * @see fu::equal()
-	 * @see fu::not_equal()
-	 * @see fu::strict_equal()
-	 * @see fu::not_strict_equal()
+	 * @see FUnit::ok()
+	 * @see FUnit::equal()
+	 * @see FUnit::not_equal()
+	 * @see FUnit::strict_equal()
+	 * @see FUnit::not_strict_equal()
 	 */
 	protected static function add_assertion_result($func_name, $func_args, $result, $msg = null, $expected_fail = false) {
 		$result = ($result) ? static::PASS : static::FAIL;
@@ -320,13 +317,13 @@ class fu {
 	 * Run a single test of the passed $name
 	 *
 	 * @param string $name the name of the test to run
-	 * @see fu::run_tests()
-	 * @see fu::setup()
-	 * @see fu::teardown()
-	 * @see fu::test()
+	 * @see FUnit::run_tests()
+	 * @see FUnit::setup()
+	 * @see FUnit::teardown()
+	 * @see FUnit::test()
 	 */
 	protected static function run_test($name) {
-		fu::out("Running test '{$name}...'");
+		FUnit::out("Running test '{$name}...'");
 		$ts_start = microtime(true);
 
 		// to associate the assertions in a test with the test,
@@ -399,8 +396,8 @@ class fu {
 	 *
 	 * Run all of the registered tests
 	 * @param string $filter optional test case name filter
-	 * @see fu::run()
-	 * @see fu::run_test()
+	 * @see FUnit::run()
+	 * @see FUnit::run_test()
 	 */
 	public static function run_tests($filter = null) {
 		foreach (static::$tests as $name => &$test) {
@@ -435,9 +432,9 @@ class fu {
 			$expected_fail = 0;
 
 			foreach ($assertions as $ass) {
-				if ($ass['result'] === fu::PASS) {
+				if ($ass['result'] === FUnit::PASS) {
 					$pass++;
-				} elseif ($ass['result'] === fu::FAIL) {
+				} elseif ($ass['result'] === FUnit::FAIL) {
 					$fail++;
 					if ($ass['expected_fail']) {
 						$expected_fail++;
@@ -499,16 +496,16 @@ class fu {
 
 	/**
 	 * helper to deal with scoping fixtures. To store a fixture:
-	 * 	fu::fixture('foo', 'bar');
+	 * 	FUnit::fixture('foo', 'bar');
 	 * to retrieve a fixture:
-	 * 	fu::fixture('foo');
+	 * 	FUnit::fixture('foo');
 	 *
 	 * I wish we didn't have to do this. In PHP 5.4 we may just be
 	 * able to bind the tests to an object and access fixtures via $this
 	 *
 	 * @param string $key the key to set or retrieve
 	 * @param mixed $val the value to assign to the key. OPTIONAL
-	 * @see fu::setup()
+	 * @see FUnit::setup()
 	 * @return mixed the value of the $key passed.
 	 */
 	public static function fixture($key, $val = null) {
@@ -522,8 +519,8 @@ class fu {
 	/**
 	 * removes all fixtures. This won't magically close connections or files, tho
 	 *
-	 * @see fu::fixture()
-	 * @see fu::teardown()
+	 * @see FUnit::fixture()
+	 * @see FUnit::teardown()
 	 */
 	public static function reset_fixtures() {
 		static::$fixtures = array();
@@ -535,7 +532,7 @@ class fu {
 	 * typically you'd use the passed function to register some fixtures
 	 *
 	 * @param Closure $setup an anon function
-	 * @see fu::fixture()
+	 * @see FUnit::fixture()
 	 */
 	public static function setup(\Closure $setup) {
 		static::$setup_func = $setup;
@@ -547,8 +544,8 @@ class fu {
 	 * typically you'd use the passed function to close/clean-up any fixtures you made
 	 *
 	 * @param Closure $teardown an anon function
-	 * @see fu::fixture()
-	 * @see fu::reset_fixtures()
+	 * @see FUnit::fixture()
+	 * @see FUnit::reset_fixtures()
 	 */
 	public static function teardown(\Closure $teardown) {
 		static::$teardown_func = $teardown;
@@ -712,7 +709,7 @@ class fu {
 	 * Fail an assertion in an expected way
 	 * @param string $msg optional description of assertion
 	 * @param bool $exptected optionally expect this test to fail
-	 * @see fu::fail()
+	 * @see FUnit::fail()
 	 */
 	public static function expect_fail($msg = null) {
 		return static::fail($msg, true);
@@ -723,13 +720,13 @@ class fu {
 	 *
 	 * @param boolean $report whether or not to output a report after tests run. Default true.
 	 * @param string $filter optional test case name filter
-	 * @see fu::run_tests()
-	 * @see fu::report()
+	 * @see FUnit::run_tests()
+	 * @see FUnit::report()
 	 */
 	public static function run($report = true, $filter = null) {
 
 		// set handlers
-		$old_error_handler = set_error_handler('\FUnit\fu::error_handler');
+		$old_error_handler = set_error_handler('\FUnit::error_handler');
 
 		static::run_tests($filter);
 		if ($report) { static::report(); }

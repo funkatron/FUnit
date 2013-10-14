@@ -1,5 +1,5 @@
 <?php
-use \FUnit\fu;
+use \FUnit as fu;
 
 require __DIR__ . '/FUnit.php';
 
