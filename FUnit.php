@@ -5,7 +5,7 @@ namespace FUnit;
 
 class fu {
 
-	const VERSION = '0.3';
+	const VERSION = '0.4';
 
 	const PASS = 'PASS';
 
