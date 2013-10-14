@@ -12,8 +12,8 @@ A simple test suite for PHP 5.3+, partially inspired by [QUnit](http://docs.jque
 ## Example
 
 	<?php
-	use \FUnit\fu;
 	require __DIR__ . '/FUnit.php';
+	use \FUnit as fu;  // note the alias to "fu" for terseness
 
 	fu::test("this is a test", function() {
 		fu::ok(1, "the integer '1' is okay");
@@ -41,46 +41,46 @@ See the `example.php` file for more.
 
 ## Methods
 
-* `fu::test($name, \Closure $test)`
-  Add a test with the name $name and an anonymous function $test. $test would contain various **assertions**, like `fu::ok()`
+* `FUnit::test($name, \Closure $test)`
+  Add a test with the name $name and an anonymous function $test. $test would contain various **assertions**, like `FUnit::ok()`
 
-* `fu::ok($a, $msg = null)`
+* `FUnit::ok($a, $msg = null)`
   Assert that $a is truthy. Optional $msg describes the test
 
-* `fu::equal($a, $b, $msg = null)`
+* `FUnit::equal($a, $b, $msg = null)`
   Assert that $a == $b. Optional $msg describes the test
 
-* `fu::not_equal($a, $b, $msg = null)`
+* `FUnit::not_equal($a, $b, $msg = null)`
   Assert that $a != $b. Optional $msg describes the test
 
-* `fu::strict_equal($a, $b, $msg = null)`
+* `FUnit::strict_equal($a, $b, $msg = null)`
   Assert that $a === $b. Optional $msg describes the test
 
-* `fu::not_strict_equal($a, $b, $msg = null)`
+* `FUnit::not_strict_equal($a, $b, $msg = null)`
   Assert that $a !== $b. Optional $msg describes the test
 
-* `fu::has($needle, $haystack, $msg = null)`
+* `FUnit::has($needle, $haystack, $msg = null)`
   Assert that an array or object (`$haystack`) has a key or property (`$needle`)
 
-* `fu::fail($msg = null, [$expected = null])`
+* `FUnit::fail($msg = null, [$expected = null])`
   Force a failed assertion. If `$expected === true`, it's marked as an *expected failure*
 
-* `fu::expect_fail($msg = null)`
-  Assets an *expected failure.* Equivalent to `fu::fail('msg', true)`
+* `FUnit::expect_fail($msg = null)`
+  Assets an *expected failure.* Equivalent to `FUnit::fail('msg', true)`
 
-* `fu::setup(\Closure $setup)`
-  Register a function to run at the start of each test. See `fu::fixture()`
+* `FUnit::setup(\Closure $setup)`
+  Register a function to run at the start of each test. See `FUnit::fixture()`
 
-* `fu::teardown(\Closure $setup)`
-  Register a function to run at the end of each test. See `fu::fixture()` and `fu::reset_fixtures()`
+* `FUnit::teardown(\Closure $setup)`
+  Register a function to run at the end of each test. See `FUnit::fixture()` and `FUnit::reset_fixtures()`
 
-* `fu::fixture($key, [$val])`
-  Retrieve or register a fixture. Use this in fu::setup() to assign fixtures to keys, and retrieve those fixtures in your tests
+* `FUnit::fixture($key, [$val])`
+  Retrieve or register a fixture. Use this in FUnit::setup() to assign fixtures to keys, and retrieve those fixtures in your tests
 
-* `fu::reset_fixtures()`
-  Clears out all fixtures in the fu::$fixtures array. This doesn't guarantee clean shutdown/close
+* `FUnit::reset_fixtures()`
+  Clears out all fixtures in the FUnit::$fixtures array. This doesn't guarantee clean shutdown/close
 
-* `fu::run($report = true)`
+* `FUnit::run($report = true)`
   Runs the registered tests. If `false` is passed, the report output is suppressed
 
 
@@ -116,3 +116,12 @@ Alternatively, you can fetch a [tarball](https://github.com/funkatron/FUnit/tarb
 If you're using a class loader (e.g., [Symfony Class Loader](https://github.com/symfony/ClassLoader)) for [PSR-0](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-0.md)-style class loading:
 
 	$loader->registerNamespace('FUnit', 'path/to/vendor/FUnit');
+
+
+## Upgrading
+
+If you're using a version older than 0.5, the namespace/class name changed to follow PSR-0 autoloader standards. The base class is now `\FUnit`, not `\FUnit\fu`. You can still call all your methods with `fu::XXX()` by aliasing the namespace like so:
+
+	use \FUnit as fu
+
+
