@@ -237,6 +237,7 @@ class FUnit {
 					. ") {$ass['msg']}" . ($ass['expected_fail']? ' (expected)' : ''), $assert_color));
 			}
 			if (count($tdata['errors']) > 0) {
+				$bt = '';
 				foreach ($tdata['errors'] as $error) {
 					if (static::$DEBUG) {
 						$sep = "\n  -> ";
