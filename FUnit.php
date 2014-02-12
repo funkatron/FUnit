@@ -2,7 +2,7 @@
 
 class FUnit {
 
-	const VERSION = '0.5';
+	const VERSION = '0.5.1';
 
 	const PASS = 'PASS';
 
