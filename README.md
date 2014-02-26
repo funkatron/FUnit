@@ -11,21 +11,24 @@ A simple test suite for PHP 5.3+, partially inspired by [QUnit](http://docs.jque
 
 ## Example
 
-	<?php
-	require __DIR__ . '/FUnit.php';
-	use \FUnit as fu;  // note the alias to "fu" for terseness
+``` php
+<?php
+require __DIR__ . '/FUnit.php';
+use \FUnit as fu;  // note the alias to "fu" for terseness
 
-	fu::test("this is a test", function() {
-		fu::ok(1, "the integer '1' is okay");
-		fu::ok(0, "the integer '0' is not okay"); // this will fail!
-	});
+fu::test("this is a test", function() {
+	fu::ok(1, "the integer '1' is okay");
+	fu::ok(0, "the integer '0' is not okay"); // this will fail!
+});
 
-	$exit_code = fu::run();
-	exit($exit_code);
+$exit_code = fu::run();
+exit($exit_code);
+```
 
 Will output:
 
-	Running test 'this is a test...'
+	> php example.php
+    Running test 'this is a test...'
 	RESULTS:
 	--------------------------------------------
 	TEST: this is a test (1/2):
@@ -36,7 +39,7 @@ Will output:
 	TOTAL ASSERTIONS: 1 pass, 1 fail, 0 expected fail, 2 total
 	TESTS: 1 run, 0 pass, 1 total
 
-See the `example.php` file for more.
+See the `example.php` file for more, or try running it with `php example.php`
 
 
 ## Methods
@@ -95,6 +98,21 @@ If you're using [Composer](https://github.com/composer/composer) to manage depen
 	}
 
 *Note that FUnit has not yet reached 1.0! That means BC may break!*
+
+If you install via Composer, you can use the auto-generated autoloader to load FUnit, like so:
+
+``` php
+<?php
+require "vendor/autoload.php"
+use \FUnit as fu;
+
+fu::test("this is a test", function() {
+    fu::ok(1, "the integer '1' is okay");
+    fu::ok(0, "the integer '0' is not okay"); // this will fail!
+});
+
+fu::run();
+```
 
 ### Install source from GitHub
 To install the source code:
