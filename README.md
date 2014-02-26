@@ -91,11 +91,13 @@ See the `example.php` file for more, or try running it with `php example.php`
 ### Install with Composer
 If you're using [Composer](https://github.com/composer/composer) to manage dependencies, you can add FUnit with it.
 
-	{
-		"require": {
-			"funkatron/funit": "dev-master"
-		}
+``` json
+{
+	"require": {
+		"funkatron/funit": "dev-master"
 	}
+}
+```
 
 *Note that FUnit has not yet reached 1.0! That means BC may break!*
 
@@ -121,7 +123,9 @@ To install the source code:
 
 And include it in your scripts:
 
-	require_once '/path/to/FUnit/FUnit.php';
+``` php
+require_once '/path/to/FUnit/FUnit.php';
+```
 
 ### Install source from zip/tarball
 Alternatively, you can fetch a [tarball](https://github.com/funkatron/FUnit/tarball/master) or [zipball](https://github.com/funkatron/FUnit/zipball/master):
@@ -133,13 +137,14 @@ Alternatively, you can fetch a [tarball](https://github.com/funkatron/FUnit/tarb
 ### Using a Class Loader
 If you're using a class loader (e.g., [Symfony Class Loader](https://github.com/symfony/ClassLoader)) for [PSR-0](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-0.md)-style class loading:
 
-	$loader->registerNamespace('FUnit', 'path/to/vendor/FUnit');
-
+``` php
+$loader->registerNamespace('FUnit', 'path/to/vendor/FUnit');
+```
 
 ## Upgrading
 
 If you're using a version older than 0.5, the namespace/class name changed to follow PSR-0 autoloader standards. The base class is now `\FUnit`, not `\FUnit\fu`. You can still call all your methods with `fu::XXX()` by aliasing the namespace like so:
-
-	use \FUnit as fu
-
+``` php
+use \FUnit as fu
+```
 
