@@ -90,11 +90,11 @@ If you're using [Composer](https://github.com/composer/composer) to manage depen
 
 	{
 		"require": {
-			"funkatron/funit": ">=1.0"
+			"funkatron/funit": "dev-master"
 		}
 	}
 
-*Note that FUnit has not yet reached 1.0!*
+*Note that FUnit has not yet reached 1.0! That means BC may break!*
 
 ### Install source from GitHub
 To install the source code:
