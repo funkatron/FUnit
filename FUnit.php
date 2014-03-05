@@ -724,13 +724,15 @@ class FUnit {
 	 * @see FUnit::run_tests()
 	 * @see FUnit::report()
 	 */
-	public static function run($report = true, $filter = null) {
+	public static function run($report = true, $filter = null, $report_format = null) {
 
 		// set handlers
 		$old_error_handler = set_error_handler('\FUnit::error_handler');
 
 		static::run_tests($filter);
-		if ($report) { static::report(); }
+		if ($report) {
+			static::report($report_format);
+		}
 
 		// restore handlers
 		if ($old_error_handler) {
