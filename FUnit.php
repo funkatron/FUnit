@@ -294,7 +294,7 @@ class FUnit {
 	 */
 	protected static function report_xunit() {
 		$counts = static::test_counts();
-		$xml = "<?xml version="1.0"?>\n";
+		$xml = "<?xml version=\"1.0\"?>\n";
 		$xml .= "<testsuite tests=\"{$counts['total']}\">\n";
 		foreach (static::$tests as $name => $tdata) {
 			$xml .= "    <testcase classname=\"funit.{$name}\" name=\"{$name}\" time=\"0\">\n";
