@@ -11,7 +11,9 @@
 		}
 	],
 	"require": {
-		"php": ">=5.3"
+		"php": ">=5.3",
+		"nategood/commando": "0.2.*",
+		"kevinlebrun/colors.php": "0.2.*"
 	},
 	"type": "library",
 	"autoload": {

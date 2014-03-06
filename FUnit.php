@@ -37,6 +37,7 @@ class FUnit {
 	static $exit_code = 0;
 
 	public static $suppress_output = false;
+	static $disable_reporting = false;
 
 	protected static $TERM_COLORS = array(
 		'BLACK' => "30",
@@ -357,6 +358,12 @@ class FUnit {
 	 * @see FUnit::test()
 	 */
 	protected static function run_test($name) {
+
+		// don't run a test more than once!
+		if (static::$tests[$name]['run']) {
+			return static::$tests[$name];
+		}
+
 		FUnit::out("Running test '{$name}...'");
 		$ts_start = microtime(true);
 
@@ -759,6 +766,10 @@ class FUnit {
 	 */
 	public static function run($report = true, $filter = null, $report_format = null) {
 
+		if (static::$disable_reporting) {
+			$report = false;
+		}
+
 		// set handlers
 		$old_error_handler = set_error_handler('\FUnit::error_handler');
 
@@ -774,6 +785,15 @@ class FUnit {
 
 		return static::$exit_code;
 
+	}
+
+	public static function set_disable_reporting($state) {
+		static::$disable_reporting = (bool)$state;
+	}
+
+
+	public static function exit_code() {
+		return static::$exit_code;
 	}
 
 	/**
