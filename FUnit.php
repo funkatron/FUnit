@@ -196,7 +196,10 @@ class FUnit {
 		switch($format) {
 			case 'xunit':
 				static::report_xunit();
+				break;
 			case 'text':
+				static::report_text();
+				break;
 			default:
 				static::report_text();
 		}
