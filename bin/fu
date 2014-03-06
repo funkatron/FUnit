@@ -1,0 +1,109 @@
+#!/usr/bin/env php
+<?php
+use \Colors\Color;
+use \Commando\Command;
+use \FUnit as fu;
+
+/**
+ * try to load up classes
+ */
+$req_paths = array(
+   __DIR__ . '/../vendor/autoload.php',
+   __DIR__ . '/../../../autoload.php',
+   __DIR__ . '/../autoload.php',
+);
+
+foreach ($req_paths as $req_path) {
+    if (is_file($req_path)) {
+        require_once($req_path);
+        break;
+    }
+}
+
+if (!class_exists('FUnit')) {
+    echo 'Could not load class FUnit' . PHP_EOL;
+    exit(1);
+}
+
+/**
+ * build CLI options with commando
+ */
+$tokens = array('fu');
+$cmd = new Command();
+$cmd
+    ->setHelp('fu is the FUnit test runner. Tell it to execute a single file, or pass it no args and it will scan file files with (tests?) in them in the current directory')
+    ->argument()->referToAs('file to run')->describeAs('tell fu to execute a single file. OPTIONAL')
+    ->option('f')
+        ->aka('format')
+        ->referToAs('report format')
+        ->must(function ($format) {
+            $formats = array('text', 'xunit');
+            return in_array($format, $formats);
+        })
+        ->describeAs('the report format. can be `text` or `xunit`. Default is `text`')
+    ->flag('d')->boolean()->description("Enable debugging");
+
+/**
+ * start looking for test files
+ */
+function getTestFiles($testfile = null)
+{
+    $clr = new Color();
+    $testfiles = array();
+    if (!empty($testfile)) {
+
+        if (!file_exists($testfile)) {
+            echo $clr("{$testfile} does not exist; exiting")->red . PHP_EOL;
+            exit(1);
+        }
+
+        $testfile = realpath($testfile);
+        if (is_dir($testfile)) {
+            $testfiles = scanDirectoryForTestFiles($testfile);
+        } else if (!is_file($testfile)) {
+            echo $clr("{$testfile} is not a file; exiting")->red . PHP_EOL;
+            exit(1);
+        } else {
+            $testfiles[] = $testfile;
+        }
+    }
+    return $testfiles;
+}
+
+function scanDirectoryForTestFiles($dirpath) {
+    $di = new \DirectoryIterator($dirpath);
+    $testfiles = array();
+    foreach ($di as $fileInfo) {
+        if (preg_match("#(tests?)#", $fileInfo->getBasename())) {
+            $testfiles[] = $fileInfo->getPathname();
+        }
+    }
+    return $testfiles;
+}
+
+/**
+ * execute the tests within the test files
+ * @param  array  $testfiles array of paths to test files
+ */
+function executeTests($testfiles = array())
+{
+    $clr = new Color();
+    if (count($testfiles) < 1) {
+        echo $clr("No test files found/specified")->red . PHP_EOL;
+        exit(1);
+    }
+    fu::set_disable_reporting(true);
+    foreach ($testfiles as $testfile) {
+        require($testfile);
+    }
+    fu::set_disable_reporting(false);
+}
+
+$args = $cmd->getArgumentValues();
+$flags = $cmd->getFlags();
+$testfiles = getTestFiles($args[0]);
+executeTests($testfiles);
+
+fu::report();
+
+exit(fu::exit_code());
