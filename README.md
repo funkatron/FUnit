@@ -86,6 +86,21 @@ See the `example.php` file for more, or try running it with `php example.php`
 * `FUnit::run($report = true)`
   Runs the registered tests. If `false` is passed, the report output is suppressed
 
+## Report formats
+
+By default, FUnit outputs a colorful `text` output, formatted for the terminal. You can also output reports in `xunit`-style xml.
+
+The report format is the third parameter of `FUnit::run()`:
+
+Example:
+``` php
+// Outputs a colored text report. This is the default format.
+FUnit::run(true, null, 'text');
+
+// Outputs xUnit-style xml
+FUnit::run(true, null, 'xunit');
+```
+
 
 ## Installation
 ### Install with Composer
