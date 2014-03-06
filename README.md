@@ -83,8 +83,11 @@ See the `example.php` file for more, or try running it with `php example.php`
 * `FUnit::reset_fixtures()`
   Clears out all fixtures in the FUnit::$fixtures array. This doesn't guarantee clean shutdown/close
 
-* `FUnit::run($report = true)`
-  Runs the registered tests. If `false` is passed, the report output is suppressed
+* `FUnit::run($report = true, $filter = null, $report_format = 'text')`
+  Runs the registered tests.
+  * `$report` (boolean): If `false` is passed, the report output is suppressed.
+  * `$filter` (string): If this is passed, only tests that contain the `$filter` string will be run.
+  * `$report_format` (string): Default is 'text'. Also accepts 'xunit'.
 
 ## Report formats
 
