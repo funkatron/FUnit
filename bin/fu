@@ -33,15 +33,22 @@ $cmd = new Command();
 $cmd
     ->setHelp('fu is the FUnit test runner. Tell it to execute a single file, or pass it no args and it will scan file files with (tests?) in them in the current directory')
     ->argument()->referToAs('file to run')->describeAs('tell fu to execute a single file. OPTIONAL')
-    ->option('f')
-        ->aka('format')
+    ->option('format')
+        ->aka('f')
         ->referToAs('report format')
         ->must(function ($format) {
             $formats = array('text', 'xunit');
             return in_array($format, $formats);
         })
         ->describeAs('the report format. can be `text` or `xunit`. Default is `text`')
-    ->flag('d')->boolean()->description("Enable debugging");
+        ->default('text')
+    ->option('filter')
+        ->referToAs('test filter')
+        ->describeAs('only run tests whose name contains this string')
+        ->default(null)
+    ->flag('d')
+        ->boolean()
+        ->description("Enable debugging");
 
 /**
  * start looking for test files
@@ -100,10 +107,10 @@ function executeTests($testfiles = array())
 }
 
 $args = $cmd->getArgumentValues();
-$flags = $cmd->getFlags();
+$flags = $cmd->getFlagValues();
 $testfiles = getTestFiles($args[0]);
 executeTests($testfiles);
 
-fu::report();
+fu::report(true, $flags['filter'], $flags['format']);
 
 exit(fu::exit_code());
