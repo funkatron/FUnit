@@ -36,6 +36,8 @@ class FUnit {
 
 	static $exit_code = 0;
 
+	public static $suppress_output = false;
+
 	protected static $TERM_COLORS = array(
 		'BLACK' => "30",
 		'RED' => "31",
@@ -168,10 +170,12 @@ class FUnit {
 	}
 
 	protected static function out($str) {
-		if (PHP_SAPI === 'cli') {
-			echo $str . "\n";
-		} else {
-			echo "<div>"  . nl2br($str) . "</div>";
+		if (!static::$suppress_output) {
+			if (PHP_SAPI === 'cli') {
+				echo $str . "\n";
+			} else {
+				echo "<div>"  . nl2br($str) . "</div>";
+			}
 		}
 	}
 
@@ -190,6 +194,8 @@ class FUnit {
 	 */
 	public static function report($format = 'text') {
 		switch($format) {
+			case 'xunit':
+				static::report_xunit();
 			case 'text':
 			default:
 				static::report_text();
@@ -276,6 +282,29 @@ class FUnit {
 		FUnit::out("TESTS: {$test_counts['run']} run, "
 				. static::color("{$test_counts['pass']} pass", 'GREEN') . ", "
 				. static::color("{$test_counts['total']} total", 'WHITE'));
+	}
+
+	/**
+	 * Output a report as xunit format (Jenkins-compatible)
+	 *
+	 * This should definitely use one of the xml-specific build/output methods, but really... life is too short
+	 *
+	 * @see FUnit::report()
+	 * @see FUnit::run()
+	 */
+	protected static function report_xunit() {
+		$counts = static::test_counts();
+		$xml = "<?xml version="1.0"?>\n";
+		$xml .= "<testsuite tests=\"{$counts['total']}\">\n";
+		foreach (static::$tests as $name => $tdata) {
+			$xml .= "    <testcase classname=\"funit.{$name}\" name=\"{$name}\" time=\"0\">\n";
+			if (!$tdata['pass']) {
+				$xml .= "<failure/>";
+			}
+			$xml .= "</testcase>\n";
+		}
+		$xml .= "</testsuite>\n";
+		echo $xml;
 	}
 
 	/**
