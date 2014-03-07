@@ -31,8 +31,30 @@ if (!class_exists('FUnit')) {
 $tokens = array('fu');
 $cmd = new Command();
 $cmd
-    ->setHelp('fu is the FUnit test runner. Tell it to execute a single file, or pass it no args and it will scan file files with (tests?) in them in the current directory')
-    ->argument()->referToAs('file to run')->describeAs('tell fu to execute a single file. OPTIONAL')
+    ->setHelp('fu is the FUnit test runner. Tell it to execute a single file, or '.
+              'pass it no args and it will scan for file names with the regex "(tests?)" '.
+              'in the current directory' . PHP_EOL . PHP_EOL .
+
+              'Example: fu ./tests' . PHP_EOL .
+              '    Scan the directory "./tests" for files that have "test(s)" in '.
+              'their names, and run those tests' . PHP_EOL . PHP_EOL .
+
+              'Example: fu tests.php' . PHP_EOL .
+              '    Execute tests in tests.php' . PHP_EOL . PHP_EOL .
+
+              'Example: fu -d tests.php' . PHP_EOL .
+              '    Execute tests in tests.php with additional debugging info' . PHP_EOL . PHP_EOL .
+
+              'Example: fu --filter="API" tests.php' . PHP_EOL .
+              '    Execute only the tests in tests.php that have "API" in the name' . PHP_EOL . PHP_EOL .
+
+              'Example: fu -s tests.php' . PHP_EOL .
+              '    Execute the tests tests.php, but suppress all output other ',
+              'than the report'
+              )
+    ->argument()->referToAs('<file to run|dir to scan>')
+        ->describeAs('tell fu to execute a single file, or a directory to scan '.
+                     'for files with "test(s)" in the name and run those')
     ->option('format')
         ->aka('f')
         ->referToAs('report format')
@@ -40,15 +62,20 @@ $cmd
             $formats = array('text', 'xunit');
             return in_array($format, $formats);
         })
-        ->describeAs('the report format. can be `text` or `xunit`. Default is `text`')
+        ->describeAs('The report format. can be `text` or `xunit`. Default is `text`')
         ->default('text')
     ->option('filter')
         ->referToAs('test filter')
-        ->describeAs('only run tests whose name contains this string')
+        ->describeAs('Only run tests whose name contains this string')
         ->default(null)
-    ->flag('d')
+    ->option('debug')
+        ->aka('d')
         ->boolean()
-        ->description("Enable debugging");
+        ->description("Enable debugging")
+    ->flag('silence')
+        ->aka('s')
+        ->boolean()
+        ->description("Silence all output except for report. Overrides --debug");
 
 /**
  * start looking for test files
@@ -92,25 +119,35 @@ function scanDirectoryForTestFiles($dirpath) {
  * execute the tests within the test files
  * @param  array  $testfiles array of paths to test files
  */
-function executeTests($testfiles = array())
+function executeTests($testfiles = array(), $filter = null)
 {
     $clr = new Color();
     if (count($testfiles) < 1) {
         echo $clr("No test files found/specified")->red . PHP_EOL;
         exit(1);
     }
-    fu::set_disable_reporting(true);
     foreach ($testfiles as $testfile) {
+        fu::debug_out("Requiring file `{$testfile}`");
+        fu::set_disable_run(true);
         require($testfile);
+        fu::set_disable_run(false);
+        fu::run(false, $filter);
     }
-    fu::set_disable_reporting(false);
 }
 
 $args = $cmd->getArgumentValues();
 $flags = $cmd->getFlagValues();
 $testfiles = getTestFiles($args[0]);
-executeTests($testfiles);
 
-fu::report(true, $flags['filter'], $flags['format']);
+if ($flags['silence']) {
+
+}
+
+fu::set_silence(!!$flags['silence']);
+fu::set_debug(!!$flags['debug']);
+
+executeTests($testfiles, $flags['filter']);
+
+fu::report($flags['format']);
 
 exit(fu::exit_code());
