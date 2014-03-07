@@ -89,6 +89,21 @@ See the `example.php` file for more, or try running it with `php example.php`
   * `$filter` (string): If this is passed, only tests that contain the `$filter` string will be run.
   * `$report_format` (string): Default is 'text'. Also accepts 'xunit'.
 
+* `FUnit::report($format = 'text')`
+  Output the test report. If you've suppressed reporting output previously, you can use this to output the report manually.
+
+* `FUnit::set_disable_reporting($state)`
+  If passed `true`, report will not be output after test runs finish. Re-enable by passing `false`.
+
+* `FUnit::set_debug($state)`
+  If passed `true`, extra debugging info (including timing and details about assertion failures) will be output. Disable by passing `false`.
+
+* `FUnit::set_silence($state)`
+  If passed `true`, only the report will be output -- no progress, debugging info, etc. Disable by passing `false`.
+
+* `FUnit::exit_code()`
+  Retrieve the exit code. If any test fails, the exit code will be set to `1`. Otherwise `0`. You can use this value to return a success or failure result with the PHP function `exit()`.
+
 ## Report formats
 
 By default, FUnit outputs a colorful `text` output, formatted for the terminal. You can also output reports in `xunit`-style xml.
