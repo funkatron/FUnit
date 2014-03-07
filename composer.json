@@ -18,5 +18,6 @@
 	"type": "library",
 	"autoload": {
 		"psr-0": { "FUnit": "" }
-	}
+	},
+	"bin": ["bin/fu"]
 }
