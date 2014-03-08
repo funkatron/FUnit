@@ -272,12 +272,8 @@ class FUnit {
 			if (count($tdata['errors']) > 0) {
 				$bt = '';
 				foreach ($tdata['errors'] as $error) {
-					if (static::$DEBUG) {
-						$sep = "\n  -> ";
-						$bt = $sep . implode($sep, $error['backtrace']);
-					} else {
-						$bt = "{$error['file']}#{$error['line']}{$bt}";
-					}
+					$sep = "\n  -> ";
+					$bt = $sep . implode($sep, $error['backtrace']);
 					FUnit::report_out(
 						' * ' . static::color(
 							strtoupper($error['type']) . ": {$error['msg']} in {$bt}",
