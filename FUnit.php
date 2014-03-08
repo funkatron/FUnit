@@ -819,6 +819,30 @@ class FUnit {
 		}
 		return $rs;
 	}
+
+	/**
+	 * assert that $haystack does not have a key or property named $needle. If $haystack
+	 * is neither an array or object, returns false
+	 * @param string $needle the key or property to look for
+	 * @param array|object $haystack the array or object to test
+	 * @param string $msg optional description of assertion
+	 */
+	public static function not_has($needle, $haystack, $msg = null) {
+		if (is_object($haystack)) {
+			$rs = !(bool)property_exists($haystack, $needle);
+		} elseif (is_array($haystack)) {
+			$rs = !(bool)array_key_exists($needle, $haystack);
+		} else {
+			$rs = false;
+		}
+
+		static::add_assertion_result(__FUNCTION__, array($needle, $haystack), $rs, $msg);
+		if (!$rs) {
+			static::debug_out('Expected: ' . var_export($haystack, true) . ' to NOT contain ' . var_export($needle, true));
+		}
+		return $rs;
+	}
+
 	/**
 	 * Force a failed assertion
 	 * @param string $msg optional description of assertion
