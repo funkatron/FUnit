@@ -76,7 +76,7 @@ See the `example.php` file for more, or try running it with `php example.php`
   Assert that $a is truthy. Optional $msg describes the test
 
 * **`FUnit::not_ok($a, $msg = null)`**    
-  Assert that $a is truthy. Optional $msg describes the test
+  Assert that $a is not truthy. Optional $msg describes the test
 
 * **`FUnit::equal($a, $b, $msg = null)`**    
   Assert that $a == $b. Optional $msg describes the test
