@@ -764,6 +764,40 @@ class FUnit {
 		return $rs;
 	}
 
+
+	/**
+	 * Iterate over all the items in `$a` and pass each to `$callback`. If the
+	 * callback returns `true` for all, it passes -- otherwise it fails
+	 * @param  array|Traversable   $a        an array or Traversable (iterable) object
+	 * @param  callable $callback [description]
+	 * @param string $msg optional description of assertion
+	 */
+	public static function all_ok($a, callable $callback, $msg = null) {
+		if (is_array($a) || !$a instanceof \Traversable) {
+			$rs = true;
+			$failed_val = null;
+			foreach ($a as $value) {
+				if (!call_user_func($callback, $value)) {
+					$rs = false;
+					$failed_val = $value;
+					break;
+				}
+			}
+		} else {
+			$rs = false;
+		}
+
+		static::add_assertion_result(__FUNCTION__, array($a, $callback), $rs, $msg);
+		if (!$rs) {
+			static::debug_out('Expected: ' . var_export($a, true) .
+			                  ' to return true in callback, but ' .
+			                  var_export($failed_val, true)) .
+							  ' returned false';
+		}
+		return $rs;
+	}
+
+
 	/**
 	 * assert that $callback throws an exception of type $exception
 	 *
