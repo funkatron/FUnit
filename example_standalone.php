@@ -61,6 +61,18 @@ fu::test('Forced Errors/Exception', function() {
 	throw new Exception('This was thrown inside a test');
 });
 
+fu::test('Checking iterable with all_ok', function () {
+	$ints = array(1, 2, 3, 4, 5);
+	fu::all_ok($ints, 'is_int', "\$ints are all integers");
+
+	$ints = array(1, 2, 3, "four", 5);
+	fu::all_ok($ints, 'is_int', "\$ints are all integers");
+
+	$evens = array(2, 4, 6, 8, 10, 12);
+	fu::all_ok($evens, function($val) {
+		return ($val % 2) === 0;
+	}, "\$evens are all even");
+});
 
 $exit = fu::run();
 
