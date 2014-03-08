@@ -1,7 +1,7 @@
 <?php
 use \FUnit as fu;
 
-require_once __DIR__ . '/FUnit.php';
+require_once __DIR__ . 'src/FUnit.php';
 
 fu::setup(function() {
 	// set a fixture to use in tests

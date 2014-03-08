@@ -31,6 +31,17 @@ class FUnit {
 	 * 		'assertions'=>array('func_name'=>'foo', 'func_args'=array('a','b'), 'result'=>$result, 'msg'=>'blahblah'),
 	 * 		'timing' => array('setup'=>ts, 'run'=>ts, 'teardown'=>ts, 'total'=ts),
 	 */
+	public static $suites = array();
+
+	/**
+	 * $tests['name'] => array(
+	 * 		'run'=>false,
+	 * 		'skipped'=>false,
+	 * 		'pass'=>false,
+	 * 		'test'=>null,
+	 * 		'assertions'=>array('func_name'=>'foo', 'func_args'=array('a','b'), 'result'=>$result, 'msg'=>'blahblah'),
+	 * 		'timing' => array('setup'=>ts, 'run'=>ts, 'teardown'=>ts, 'total'=ts),
+	 */
 	static $tests = array();
 
 	static $current_test_name = null;
