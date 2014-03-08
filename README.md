@@ -29,7 +29,7 @@ exit($exit_code);
 
 Will output:
 
-	> php example.php
+	> php example_standalone.php
     Running test 'this is a test...'
 	RESULTS:
 	--------------------------------------------
@@ -41,8 +41,13 @@ Will output:
 	TOTAL ASSERTIONS: 1 pass, 1 fail, 0 expected fail, 2 total
 	TESTS: 1 run, 0 pass, 1 total
 
-See the `example.php` file for more, or try running it with `php example.php`
+See the `example_standalone.php` file for more, or try running it with `php example_standalone.php`
 
+Alternately, if you load `standalone_example.php` in a web browser, it will output a very simple HTML version of the text report. If you're running PHP 5.4 or above, you can use the dev server to view it like so:
+
+`php -S 0.0.0.0:8000 example_standalone.php`
+
+And then open <http://0.0.0.0:8000> in a web browser.
 
 ## Methods
 
@@ -147,6 +152,13 @@ FUnit::run(true, null, 'text');
 FUnit::run(true, null, 'xunit');
 ```
 
+### Browser output
+
+The standard `text` report format will output as very simple HTML if the test file is loaded up through a web server. You can test this with the dev server if you're running PHP 5.4+:
+
+`php -S 0.0.0.0:8000 test_file.php`
+
+And then open <http://0.0.0.0:8000> in a web browser.
 
 ## CLI Test Runner Utility
 
