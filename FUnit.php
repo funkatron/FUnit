@@ -735,6 +735,20 @@ class FUnit {
 	}
 
 	/**
+	 * assert that $a is falsy. Casts $a to boolean for result
+	 * @param mixed $a the actual value
+	 * @param string $msg optional description of assertion
+	 */
+	public static function not_ok($a, $msg = null) {
+		$rs = !(bool)$a;
+		static::add_assertion_result(__FUNCTION__, array($a), $rs, $msg);
+		if (!$rs) {
+			static::debug_out('Expected: ' . var_export($a, true) . ' to be falsy');
+		}
+		return $rs;
+	}
+
+	/**
 	 * assert that $callback throws an exception of type $exception
 	 *
 	 * If $params is an array, it is passed as arguments to the callback.
