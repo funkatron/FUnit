@@ -825,6 +825,15 @@ class FUnit {
 	}
 
 	/**
+	 * Force a successful assertion
+	 * @param string $msg optional description of assertion
+	 */
+	public static function pass($msg = null) {
+		static::add_assertion_result(__FUNCTION__, array(), true, $msg);
+		return true;
+	}
+
+	/**
 	 * Run the registered tests, and output a report
 	 *
 	 * @param boolean $report whether or not to output a report after tests run. Default true.
