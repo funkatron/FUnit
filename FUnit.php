@@ -730,7 +730,8 @@ class FUnit {
 		$rs = ($a !== $b);
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 		if (!$rs) {
-			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be strictly unequal');
+			static::debug_out('Expected: ' . var_export($a, true) . ' and ' .
+			                  var_export($b, true) . ' to be strictly unequal');
 		}
 		return $rs;
 	}
