@@ -1,7 +1,7 @@
 <?php
 use \FUnit as fu;
 
-require __DIR__ . '/FUnit.php';
+require_once __DIR__ . '/FUnit.php';
 
 fu::setup(function() {
 	// set a fixture to use in tests
@@ -61,6 +61,19 @@ fu::test('Forced Errors/Exception', function() {
 	throw new Exception('This was thrown inside a test');
 });
 
+fu::test('Checking iterables with all_ok', function () {
+	$ints = array(1, 2, 3, 4, 5);
+	fu::all_ok($ints, 'is_int', "\$ints are all integers");
+
+	$ints = array(1, 2, 3, "four", 5);
+	fu::all_ok($ints, 'is_int', "\$ints are all integers");
+
+	$evens = array('a' => 2, 'b' => 42, 'c' => 68, 'd' => 800);
+	$evens_ao = new ArrayObject($evens);
+	fu::all_ok($evens_ao, function($val) {
+		return ($val % 2) === 0;
+	}, "\$evens_ao are all even");
+});
 
 $exit = fu::run();
 

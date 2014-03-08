@@ -14,9 +14,18 @@ class FUnit {
 	public static $DEBUG = false;
 	public static $DEBUG_COLOR = 'BLUE';
 
+	public static $INFO_COLOR = 'WHITE';
+
+	/**
+	 * if `true`, nothing will be output but the report
+	 * @var boolean
+	 */
+	public static $SILENCE = false;
+
 	/**
 	 * $tests['name'] => array(
 	 * 		'run'=>false,
+	 * 		'skipped'=>false,
 	 * 		'pass'=>false,
 	 * 		'test'=>null,
 	 * 		'assertions'=>array('func_name'=>'foo', 'func_args'=array('a','b'), 'result'=>$result, 'msg'=>'blahblah'),
@@ -36,7 +45,18 @@ class FUnit {
 
 	static $exit_code = 0;
 
-	public static $suppress_output = false;
+	/**
+	 * if `true`, will not output a report
+	 * @var boolean
+	 */
+	static $disable_reporting = false;
+
+	/**
+	 * this is used by the test runner utility to suppress FUnit::run() calls
+	 * in `require`d files
+	 * @var boolean
+	 */
+	static $disable_run = false;
 
 	protected static $TERM_COLORS = array(
 		'BLACK' => "30",
@@ -66,8 +86,20 @@ class FUnit {
 		$msg = $e->getMessage();
 		$file = $e->getFile();
 		$line = $e->getLine();
+		$bt_raw = $e->getTrace();
 
-		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line');
+		array_unshift($bt_raw, array(
+			'file' => $file,
+			'line' => $line,
+			'msg' => $msg,
+			'num' => $num,
+			'type' => $type,
+			'datetime' => $datetime,
+		));
+
+		$backtrace = static::parse_backtrace($bt_raw);
+
+		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line', 'backtrace');
 
 		FUnit::add_error_data($edata);
 	}
@@ -77,6 +109,7 @@ class FUnit {
 	 * custom error handler to catch errors triggered while running tests. this is
 	 * registered at the start of FUnit::run() and deregistered at stop
 	 * @see FUnit::run()
+	 * @internal
 	 */
 	public static function error_handler($num, $msg, $file, $line, $vars) {
 
@@ -100,8 +133,26 @@ class FUnit {
 
 		$type = $types[$num];
 
+		$bt_raw = debug_backtrace();
+		array_shift($bt_raw);
+		$backtrace = static::parse_backtrace($bt_raw);
+
+		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line', 'backtrace');
+
+		FUnit::add_error_data($edata);
+	}
+
+
+	/**
+	 * this generates an array of formatted strings to represent the backtrace
+	 * @param  array $bt_raw the raw backtrace array
+	 * @return array      an array of strings
+	 * @see FUnit::error_handler()
+	 * @see FUnit::exception_handler()
+	 */
+	protected static function parse_backtrace($bt_raw) {
 		$backtrace = array();
-		foreach (debug_backtrace() as $bt) {
+		foreach ($bt_raw as $bt) {
 			if (isset($bt['function']) && __FUNCTION__ == $bt['function'] && isset($bt['class']) && __CLASS__ == $bt['class']) {
 				continue; // don't bother backtracing
 			}
@@ -118,10 +169,7 @@ class FUnit {
 			$backtrace[] = $trace;
 
 		}
-
-		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line', 'backtrace');
-
-		FUnit::add_error_data($edata);
+		return $backtrace;
 	}
 
 	/**
@@ -170,20 +218,32 @@ class FUnit {
 	}
 
 	protected static function out($str) {
-		if (!static::$suppress_output) {
-			if (PHP_SAPI === 'cli') {
-				echo $str . "\n";
-			} else {
-				echo "<div>"  . nl2br($str) . "</div>";
-			}
+		if (PHP_SAPI === 'cli') {
+			echo $str . "\n";
+		} else {
+			echo "<div>"  . nl2br($str) . "</div>";
 		}
 	}
 
-	protected static function debug_out($str) {
-		if (!static::$DEBUG) {
+	public static function debug_out($str) {
+		if (!static::$DEBUG || static::$SILENCE) {
 			return;
 		}
 		static::out(static::color($str, static::$DEBUG_COLOR));
+	}
+
+	public static function info_out($str) {
+		if (static::$SILENCE) {
+			return;
+		}
+		static::out(static::color($str, static::$INFO_COLOR));
+	}
+
+	/**
+	 * @internal
+	 */
+	public static function report_out($str) {
+		static::out($str);
 	}
 
 	/**
@@ -193,6 +253,7 @@ class FUnit {
 	 * @see FUnit::report_text()
 	 */
 	public static function report($format = 'text') {
+
 		switch($format) {
 			case 'xunit':
 				static::report_xunit();
@@ -219,8 +280,8 @@ class FUnit {
 		$total_assert_counts = static::assert_counts();
 		$test_counts = static::test_counts();
 
-		FUnit::out("RESULTS:");
-		FUnit::out("--------------------------------------------");
+		FUnit::report_out("RESULTS:");
+		FUnit::report_out("--------------------------------------------");
 
 		foreach (static::$tests as $name => $tdata) {
 
@@ -234,7 +295,7 @@ class FUnit {
 					$test_color = 'RED';
 				}
 			}
-			FUnit::out("TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):", $test_color));
+			FUnit::report_out("TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):", $test_color));
 
 			foreach ($tdata['assertions'] as $ass) {
 				if ($ass['expected_fail']) {
@@ -242,7 +303,7 @@ class FUnit {
 				} else {
 					$assert_color = $ass['result'] == static::PASS ? 'GREEN' : 'RED';
 				}
-				FUnit::out(" * "
+				FUnit::report_out(" * "
 					. static::color("{$ass['result']}"
 					. " {$ass['func_name']}("
 					// @TODO we should coerce these into strings and output only on fail
@@ -252,13 +313,9 @@ class FUnit {
 			if (count($tdata['errors']) > 0) {
 				$bt = '';
 				foreach ($tdata['errors'] as $error) {
-					if (static::$DEBUG) {
-						$sep = "\n  -> ";
-						$bt = $sep . implode($sep, $error['backtrace']);
-					} else {
-						$bt = "{$error['file']}#{$error['line']}{$bt}";
-					}
-					FUnit::out(
+					$sep = "\n  -> ";
+					$bt = $sep . implode($sep, $error['backtrace']);
+					FUnit::report_out(
 						' * ' . static::color(
 							strtoupper($error['type']) . ": {$error['msg']} in {$bt}",
 							'RED')
@@ -266,23 +323,23 @@ class FUnit {
 				}
 			}
 
-			FUnit::out("");
+			FUnit::report_out("");
 		}
 
 
 		$err_count = count($tdata['errors']);
 		$err_color = (count($tdata['errors']) > 0) ? 'RED' : 'WHITE';
-		FUnit::out("ERRORS/EXCEPTIONS: "
+		FUnit::report_out("ERRORS/EXCEPTIONS: "
 			. static::color($err_count, $err_color) );
 
 
-		FUnit::out("ASSERTIONS: "
+		FUnit::report_out("ASSERTIONS: "
 				. static::color("{$total_assert_counts['pass']} pass", 'GREEN') . ", "
 				. static::color("{$total_assert_counts['fail']} fail", 'RED') . ", "
 				. static::color("{$total_assert_counts['expected_fail']} expected fail", 'YELLOW') . ", "
 				. static::color("{$total_assert_counts['total']} total", 'WHITE'));
 
-		FUnit::out("TESTS: {$test_counts['run']} run, "
+		FUnit::report_out("TESTS: {$test_counts['run']} run, "
 				. static::color("{$test_counts['pass']} pass", 'GREEN') . ", "
 				. static::color("{$test_counts['total']} total", 'WHITE'));
 	}
@@ -307,7 +364,7 @@ class FUnit {
 			$xml .= "</testcase>\n";
 		}
 		$xml .= "</testsuite>\n";
-		echo $xml;
+		FUnit::report_out($xml);
 	}
 
 	/**
@@ -318,8 +375,10 @@ class FUnit {
 	 * @param Closure $test the function to execute for the test
 	 */
 	protected static function add_test($name, \Closure $test) {
+		static::debug_out("Adding test {$name}");
 		static::$tests[$name] = array(
 			'run' => false,
+			'skipped' => false,
 			'pass' => false,
 			'test' => $test,
 			'errors' => array(),
@@ -360,7 +419,15 @@ class FUnit {
 	 * @see FUnit::test()
 	 */
 	protected static function run_test($name) {
-		FUnit::out("Running test '{$name}...'");
+
+		// don't run a test more than once!
+		if (static::$tests[$name]['run']) {
+			FUnit::debug_out("test '{$name}' was already run; skipping");
+			return static::$tests[$name];
+		}
+
+		FUnit::info_out("Running test '{$name}...'");
+
 		$ts_start = microtime(true);
 
 		// to associate the assertions in a test with the test,
@@ -370,6 +437,7 @@ class FUnit {
 
 		// setup
 		if (isset(static::$setup_func)) {
+			FUnit::debug_out("running setup for '{$name}'");
 			$setup_func = static::$setup_func;
 			$setup_func();
 			unset($setup_func);
@@ -377,7 +445,7 @@ class FUnit {
 		$ts_setup = microtime(true);
 
 		try {
-
+			FUnit::debug_out("executing test function for '{$name}'");
 			$test();
 
 		} catch(\Exception $e) {
@@ -389,6 +457,7 @@ class FUnit {
 
 		// teardown
 		if (isset(static::$teardown_func)) {
+			FUnit::debug_out("running teardown for '{$name}'");
 			$teardown_func = static::$teardown_func;
 			$teardown_func();
 			unset($teardown_func);
@@ -435,11 +504,15 @@ class FUnit {
 	 * @param string $filter optional test case name filter
 	 * @see FUnit::run()
 	 * @see FUnit::run_test()
+	 * @internal
 	 */
 	public static function run_tests($filter = null) {
-		foreach (static::$tests as $name => &$test) {
-			if (null === $filter || (stripos($name, $filter) !== false)) {
+		foreach (static::$tests as $name => &$test)  {
+			if (is_null($filter) || stripos($name, $filter) !== false) {
 				static::run_test($name);
+			} else {
+				static::$tests[$name]['skipped'] = true;
+				static::debug_out("skipping test {$name} due to filter");
 			}
 		}
 	}
@@ -657,7 +730,8 @@ class FUnit {
 		$rs = ($a !== $b);
 		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 		if (!$rs) {
-			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be strictly unequal');
+			static::debug_out('Expected: ' . var_export($a, true) . ' and ' .
+			                  var_export($b, true) . ' to be strictly unequal');
 		}
 		return $rs;
 	}
@@ -675,6 +749,57 @@ class FUnit {
 		}
 		return $rs;
 	}
+
+	/**
+	 * assert that $a is falsy. Casts $a to boolean for result
+	 * @param mixed $a the actual value
+	 * @param string $msg optional description of assertion
+	 */
+	public static function not_ok($a, $msg = null) {
+		$rs = !(bool)$a;
+		static::add_assertion_result(__FUNCTION__, array($a), $rs, $msg);
+		if (!$rs) {
+			static::debug_out('Expected: ' . var_export($a, true) . ' to be falsy');
+		}
+		return $rs;
+	}
+
+
+	/**
+	 * Iterate over all the items in `$a` and pass each to `$callback`. If the
+	 * callback returns `true` for all, it passes -- otherwise it fails
+	 * @param  array|Traversable   $a        an array or Traversable (iterable) object
+	 * @param  callable $callback [description]
+	 * @param string $msg optional description of assertion
+	 */
+	public static function all_ok($a, callable $callback, $msg = null) {
+		if (is_array($a) || $a instanceof \Traversable) {
+			$rs = true;
+			$failed_val = null;
+			foreach ($a as $value) {
+				if (!call_user_func($callback, $value)) {
+					$rs = false;
+					$failed_val = $value;
+					break;
+				}
+			}
+		} else {
+			static::debug_out("\$a was not an array or Traversable");
+
+			$failed_val = null;
+			$rs = false;
+		}
+
+		static::add_assertion_result(__FUNCTION__, array($a, $callback), $rs, $msg);
+		if (!$rs) {
+			static::debug_out('Expected: ' . var_export($a, true) .
+			                  ' to return true in callback, but ' .
+			                  var_export($failed_val, true) .
+							  ' returned false');
+		}
+		return $rs;
+	}
+
 
 	/**
 	 * assert that $callback throws an exception of type $exception
@@ -732,6 +857,30 @@ class FUnit {
 		}
 		return $rs;
 	}
+
+	/**
+	 * assert that $haystack does not have a key or property named $needle. If $haystack
+	 * is neither an array or object, returns false
+	 * @param string $needle the key or property to look for
+	 * @param array|object $haystack the array or object to test
+	 * @param string $msg optional description of assertion
+	 */
+	public static function not_has($needle, $haystack, $msg = null) {
+		if (is_object($haystack)) {
+			$rs = !(bool)property_exists($haystack, $needle);
+		} elseif (is_array($haystack)) {
+			$rs = !(bool)array_key_exists($needle, $haystack);
+		} else {
+			$rs = false;
+		}
+
+		static::add_assertion_result(__FUNCTION__, array($needle, $haystack), $rs, $msg);
+		if (!$rs) {
+			static::debug_out('Expected: ' . var_export($haystack, true) . ' to NOT contain ' . var_export($needle, true));
+		}
+		return $rs;
+	}
+
 	/**
 	 * Force a failed assertion
 	 * @param string $msg optional description of assertion
@@ -753,6 +902,15 @@ class FUnit {
 	}
 
 	/**
+	 * Force a successful assertion
+	 * @param string $msg optional description of assertion
+	 */
+	public static function pass($msg = null) {
+		static::add_assertion_result(__FUNCTION__, array(), true, $msg);
+		return true;
+	}
+
+	/**
 	 * Run the registered tests, and output a report
 	 *
 	 * @param boolean $report whether or not to output a report after tests run. Default true.
@@ -761,6 +919,16 @@ class FUnit {
 	 * @see FUnit::report()
 	 */
 	public static function run($report = true, $filter = null, $report_format = null) {
+
+		if (static::$disable_run) {
+			FUnit::debug_out("Not running tests because of \$disable_run");
+			return;
+		}
+
+		if (static::$disable_reporting) {
+			FUnit::debug_out("Reporting disabled");
+			$report = false;
+		}
 
 		// set handlers
 		$old_error_handler = set_error_handler('\FUnit::error_handler');
@@ -777,6 +945,52 @@ class FUnit {
 
 		return static::$exit_code;
 
+	}
+
+	/**
+	 * Passing `true` will disable the reporting output
+	 * @param boolean $state
+	 */
+	public static function set_disable_reporting($state) {
+		static::$disable_reporting = (bool)$state;
+	}
+
+	/**
+	 * Passing `true` will disable the FUnit::run() method. This is used by
+	 * the test runner utility to avoid calls to run tests within scripts
+	 * @param boolean $state
+	 * @private
+	 */
+	public static function set_disable_run($state) {
+		static::$disable_run = (bool)$state;
+	}
+
+	/**
+	 * if true, debugging info will be output.
+	 * Note that $SILENCE will override the $DEBUG state
+	 * @param boolean $state
+	 */
+	public static function set_debug($state) {
+		static::$DEBUG = (bool)$state;
+	}
+
+	/**
+	 * if $SILENCE is true, only the report will be output -- no progress etc.
+	 * This will override the $DEBUG state
+	 * @param boolean $state
+	 */
+	public static function set_silence($state) {
+		static::$SILENCE = (bool)$state;
+	}
+
+	/**
+	 * retrieve the exit code.
+	 *
+	 * If any test fails, the exit code will be set to `1`. Otherwise `0`
+	 * @return integer 0 or 1
+	 */
+	public static function exit_code() {
+		return static::$exit_code;
 	}
 
 	/**

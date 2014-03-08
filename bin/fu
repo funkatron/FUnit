@@ -1,0 +1,153 @@
+#!/usr/bin/env php
+<?php
+use \Colors\Color;
+use \Commando\Command;
+use \FUnit as fu;
+
+/**
+ * try to load up classes
+ */
+$req_paths = array(
+   __DIR__ . '/../vendor/autoload.php',
+   __DIR__ . '/../../../autoload.php',
+   __DIR__ . '/../autoload.php',
+);
+
+foreach ($req_paths as $req_path) {
+    if (is_file($req_path)) {
+        require_once($req_path);
+        break;
+    }
+}
+
+if (!class_exists('FUnit')) {
+    echo 'Could not load class FUnit' . PHP_EOL;
+    exit(1);
+}
+
+/**
+ * build CLI options with commando
+ */
+$tokens = array('fu');
+$cmd = new Command();
+$cmd
+    ->setHelp('fu is the FUnit test runner. Tell it to execute a single file, or '.
+              'pass it no args and it will scan for file names with the regex "(tests?)" '.
+              'in the current directory' . PHP_EOL . PHP_EOL .
+
+              'Example: fu ./tests' . PHP_EOL .
+              '    Scan the directory "./tests" for files that have "test(s)" in '.
+              'their names, and run those tests' . PHP_EOL . PHP_EOL .
+
+              'Example: fu tests.php' . PHP_EOL .
+              '    Execute tests in tests.php' . PHP_EOL . PHP_EOL .
+
+              'Example: fu -d tests.php' . PHP_EOL .
+              '    Execute tests in tests.php with additional debugging info' . PHP_EOL . PHP_EOL .
+
+              'Example: fu --filter="API" tests.php' . PHP_EOL .
+              '    Execute only the tests in tests.php that have "API" in the name' . PHP_EOL . PHP_EOL .
+
+              'Example: fu -s tests.php' . PHP_EOL .
+              '    Execute the tests tests.php, but suppress all output other ',
+              'than the report'
+              )
+    ->argument()->referToAs('<file to run|dir to scan>')
+        ->describeAs('tell fu to execute a single file, or a directory to scan '.
+                     'for files with "test(s)" in the name and run those')
+    ->option('format')
+        ->aka('f')
+        ->referToAs('report format')
+        ->must(function ($format) {
+            $formats = array('text', 'xunit');
+            return in_array($format, $formats);
+        })
+        ->describeAs('The report format. can be `text` or `xunit`. Default is `text`')
+        ->default('text')
+    ->option('filter')
+        ->referToAs('test filter')
+        ->describeAs('Only run tests whose name contains this string')
+        ->default(null)
+    ->option('debug')
+        ->aka('d')
+        ->boolean()
+        ->description("Enable debugging")
+    ->flag('silence')
+        ->aka('s')
+        ->boolean()
+        ->description("Silence all output except for report. Overrides --debug");
+
+/**
+ * start looking for test files
+ */
+function getTestFiles($testfile = null)
+{
+    $clr = new Color();
+    $testfiles = array();
+    if (!empty($testfile)) {
+
+        if (!file_exists($testfile)) {
+            echo $clr("{$testfile} does not exist; exiting")->red . PHP_EOL;
+            exit(1);
+        }
+
+        $testfile = realpath($testfile);
+        if (is_dir($testfile)) {
+            $testfiles = scanDirectoryForTestFiles($testfile);
+        } else if (!is_file($testfile)) {
+            echo $clr("{$testfile} is not a file; exiting")->red . PHP_EOL;
+            exit(1);
+        } else {
+            $testfiles[] = $testfile;
+        }
+    }
+    return $testfiles;
+}
+
+function scanDirectoryForTestFiles($dirpath) {
+    $di = new \DirectoryIterator($dirpath);
+    $testfiles = array();
+    foreach ($di as $fileInfo) {
+        if (preg_match("#(tests?)#", $fileInfo->getBasename())) {
+            $testfiles[] = $fileInfo->getPathname();
+        }
+    }
+    return $testfiles;
+}
+
+/**
+ * execute the tests within the test files
+ * @param  array  $testfiles array of paths to test files
+ */
+function executeTests($testfiles = array(), $filter = null)
+{
+    $clr = new Color();
+    if (count($testfiles) < 1) {
+        echo $clr("No test files found/specified")->red . PHP_EOL;
+        exit(1);
+    }
+    foreach ($testfiles as $testfile) {
+        fu::debug_out("Requiring file `{$testfile}`");
+        fu::set_disable_run(true);
+        require($testfile);
+        fu::set_disable_run(false);
+        fu::run(false, $filter);
+    }
+}
+
+$args = $cmd->getArgumentValues();
+$flags = $cmd->getFlagValues();
+$testfiles = getTestFiles($args[0]);
+
+if ($flags['silence']) {
+
+}
+
+fu::set_silence(!!$flags['silence']);
+fu::set_debug(!!$flags['debug']);
+
+executeTests($testfiles, $flags['filter']);
+
+fu::report($flags['format']);
+
+exit(fu::exit_code());
