@@ -76,8 +76,20 @@ class FUnit {
 		$msg = $e->getMessage();
 		$file = $e->getFile();
 		$line = $e->getLine();
+		$bt_raw = $e->getTrace();
 
-		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line');
+		array_unshift($bt_raw, array(
+			'file' => $file,
+			'line' => $line,
+			'msg' => $msg,
+			'num' => $num,
+			'type' => $type,
+			'datetime' => $datetime,
+		));
+
+		$backtrace = static::parse_backtrace($bt_raw);
+
+		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line', 'backtrace');
 
 		FUnit::add_error_data($edata);
 	}
@@ -110,8 +122,26 @@ class FUnit {
 
 		$type = $types[$num];
 
+		$bt_raw = debug_backtrace();
+		array_shift($bt_raw);
+		$backtrace = static::parse_backtrace($bt_raw);
+
+		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line', 'backtrace');
+
+		FUnit::add_error_data($edata);
+	}
+
+
+	/**
+	 * this generates an array of formatted strings to represent the backtrace
+	 * @param  array $bt_raw the raw backtrace array
+	 * @return array      an array of strings
+	 * @see FUnit::error_handler()
+	 * @see FUnit::exception_handler()
+	 */
+	protected static function parse_backtrace($bt_raw) {
 		$backtrace = array();
-		foreach (debug_backtrace() as $bt) {
+		foreach ($bt_raw as $bt) {
 			if (isset($bt['function']) && __FUNCTION__ == $bt['function'] && isset($bt['class']) && __CLASS__ == $bt['class']) {
 				continue; // don't bother backtracing
 			}
@@ -128,10 +158,7 @@ class FUnit {
 			$backtrace[] = $trace;
 
 		}
-
-		$edata = compact('datetime', 'num', 'type', 'msg', 'file', 'line', 'backtrace');
-
-		FUnit::add_error_data($edata);
+		return $backtrace;
 	}
 
 	/**
