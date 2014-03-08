@@ -773,7 +773,7 @@ class FUnit {
 	 * @param string $msg optional description of assertion
 	 */
 	public static function all_ok($a, callable $callback, $msg = null) {
-		if (is_array($a) || !$a instanceof \Traversable) {
+		if (is_array($a) || $a instanceof \Traversable) {
 			$rs = true;
 			$failed_val = null;
 			foreach ($a as $value) {
@@ -784,6 +784,9 @@ class FUnit {
 				}
 			}
 		} else {
+			static::debug_out("\$a was not an array or Traversable");
+
+			$failed_val = null;
 			$rs = false;
 		}
 
@@ -791,8 +794,8 @@ class FUnit {
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) .
 			                  ' to return true in callback, but ' .
-			                  var_export($failed_val, true)) .
-							  ' returned false';
+			                  var_export($failed_val, true) .
+							  ' returned false');
 		}
 		return $rs;
 	}
