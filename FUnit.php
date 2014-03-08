@@ -16,11 +16,16 @@ class FUnit {
 
 	public static $INFO_COLOR = 'WHITE';
 
+	/**
+	 * if `true`, nothing will be output but the report
+	 * @var boolean
+	 */
 	public static $SILENCE = false;
 
 	/**
 	 * $tests['name'] => array(
 	 * 		'run'=>false,
+	 * 		'skipped'=>false,
 	 * 		'pass'=>false,
 	 * 		'test'=>null,
 	 * 		'assertions'=>array('func_name'=>'foo', 'func_args'=array('a','b'), 'result'=>$result, 'msg'=>'blahblah'),
@@ -40,10 +45,15 @@ class FUnit {
 
 	static $exit_code = 0;
 
+	/**
+	 * if `true`, will not output a report
+	 * @var boolean
+	 */
 	static $disable_reporting = false;
 
 	/**
-	 * this is used by the test runner utility
+	 * this is used by the test runner utility to suppress FUnit::run() calls
+	 * in `require`d files
 	 * @var boolean
 	 */
 	static $disable_run = false;
@@ -99,6 +109,7 @@ class FUnit {
 	 * custom error handler to catch errors triggered while running tests. this is
 	 * registered at the start of FUnit::run() and deregistered at stop
 	 * @see FUnit::run()
+	 * @internal
 	 */
 	public static function error_handler($num, $msg, $file, $line, $vars) {
 
@@ -228,6 +239,9 @@ class FUnit {
 		static::out(static::color($str, static::$INFO_COLOR));
 	}
 
+	/**
+	 * @internal
+	 */
 	public static function report_out($str) {
 		static::out($str);
 	}
@@ -490,6 +504,7 @@ class FUnit {
 	 * @param string $filter optional test case name filter
 	 * @see FUnit::run()
 	 * @see FUnit::run_test()
+	 * @internal
 	 */
 	public static function run_tests($filter = null) {
 		foreach (static::$tests as $name => &$test)  {
