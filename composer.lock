@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "df5b5f0d5bd7f4cae195c1c1e3a2c4ee",
+    "hash": "2bbdd2393f13332683b4eacc0dcccd15",
     "packages": [
         {
             "name": "kevinlebrun/colors.php",
