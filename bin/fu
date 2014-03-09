@@ -148,9 +148,6 @@ fu::set_debug(!!$flags['debug']);
 
 executeTests($testfiles, $flags['filter']);
 
-foreach (fu::$suites as $name => $suite) {
-    fu::report($flags['format'], $suite);
-}
-
+fu::report_all_tests($flags['format']);
 
 exit(fu::exit_code());
