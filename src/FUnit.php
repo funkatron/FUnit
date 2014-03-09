@@ -693,6 +693,7 @@ class FUnit {
 			static::add_assertion_result($name, $arguments, $rs, $msg, $expected_fail);
 			return $rs;
 		}
+		throw new \BadMethodCallException("Method {$assert_name} does not exist");
 	}
 
 
