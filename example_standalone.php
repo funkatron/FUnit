@@ -1,7 +1,4 @@
 <?php
-/**
- * alternately use class_alias('\FUnit\FUnit', '\FUnit');
- */
 use \FUnit as fu;
 
 require_once __DIR__ . '/src/FUnit.php';
