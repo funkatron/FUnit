@@ -982,13 +982,19 @@ class FUnit {
 	}
 
 	/**
-	 * retrieve the exit code.
+	 * Retrieve the exit code. It scans all suites for their exit codes, and if
+	 * AND of them are 1, returns 1. Else 0.
 	 *
 	 * If any test fails, the exit code will be set to `1`. Otherwise `0`
 	 * @return integer 0 or 1
 	 */
 	public static function exit_code() {
-		return static::$exit_code;
+		foreach (static::$suites as $name => $suite) {
+			if ($suite->getExitCode() === 1) {
+				return 1;
+			}
+		}
+		return 0;
 	}
 
 	/**
