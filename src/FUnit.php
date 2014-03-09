@@ -945,17 +945,18 @@ class FUnit {
 			return;
 		}
 
-		if (static::$disable_reporting) {
-			FUnit::debug_out("Reporting disabled");
-			$report = false;
-		}
-
 		// set handlers
 		$old_error_handler = set_error_handler('\FUnit::error_handler');
 
 		// run the tests in the suite
 		FUnit::debug_out("Running tests in suite '" . $suite->getName() . "'");
 		$run_tests = $suite->runTests($filter);
+
+		if (static::$disable_reporting) {
+			FUnit::debug_out("Reporting disabled");
+			$report = false;
+		}
+
 		if ($report) {
 			FUnit::debug_out("Printing report for tests run in suite '" . $suite->getName() . "'");
 			static::report($report_format, $run_tests);
