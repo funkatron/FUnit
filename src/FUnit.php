@@ -662,6 +662,7 @@ class FUnit {
 	 * @param  string $name default is FUnit::DEFAULT_SUITE_NAME
 	 */
 	public static function suite($name = self::DEFAULT_SUITE_NAME) {
+		static::debug_out("Adding suite named '{$name}'");
 		$suite = static::add_suite($name);
 		static::$current_suite_name = $suite->getName();
 	}
@@ -952,9 +953,13 @@ class FUnit {
 		$old_error_handler = set_error_handler('\FUnit::error_handler');
 
 		// run the tests in the suite
+		FUnit::debug_out("Running tests in suite '" . $suite->getName() . "'");
 		$run_tests = $suite->runTests($filter);
 		if ($report) {
+			FUnit::debug_out("Printing report for tests run in suite '" . $suite->getName() . "'");
 			static::report($report_format, $run_tests);
+		} else {
+			FUnit::debug_out("Not printing report for tests run in suite '" . $suite->getName() . "'");
 		}
 
 		// add this suite's data to the static $all_run_tests
@@ -979,6 +984,7 @@ class FUnit {
 	 * @param boolean $state
 	 */
 	public static function set_disable_reporting($state) {
+		static::debug_out("Setting \$disable_reporting to " . (bool)$state);
 		static::$disable_reporting = (bool)$state;
 	}
 
@@ -989,6 +995,7 @@ class FUnit {
 	 * @private
 	 */
 	public static function set_disable_run($state) {
+		static::debug_out("Setting \$disable_run to " . (bool)$state);
 		static::$disable_run = (bool)$state;
 	}
 
@@ -998,6 +1005,7 @@ class FUnit {
 	 * @param boolean $state
 	 */
 	public static function set_debug($state) {
+		static::debug_out("Setting \$DEBUG to " . (bool)$state);
 		static::$DEBUG = (bool)$state;
 	}
 
@@ -1007,6 +1015,7 @@ class FUnit {
 	 * @param boolean $state
 	 */
 	public static function set_silence($state) {
+		static::debug_out("Setting \$SILENCE to " . (bool)$state);
 		static::$SILENCE = (bool)$state;
 	}
 

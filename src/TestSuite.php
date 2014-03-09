@@ -55,7 +55,7 @@ class TestSuite
      */
     public function addTest($name, \Closure $test)
     {
-        \FUnit::debug_out("Adding test {$name} to suite " . $this->getName());
+        \FUnit::debug_out("Adding test '{$name}' to suite '" . $this->getName() . "'");
         $this->tests[$name] = array(
             'run' => false,
             'skipped' => false,
