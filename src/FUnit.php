@@ -380,6 +380,90 @@ class FUnit {
 	}
 
 	/**
+	 * Retrieves stats about tests run. returns an array with the keys
+	 * 'total', 'pass', 'run'
+	 *
+	 * @param  array $tests  a set of test results
+	 * @return array has keys 'total', 'pass', 'run'
+	 */
+	public static function test_stats(array $tests) {
+		$total = count($tests);
+		$run = 0;
+		$pass = 0;
+
+		foreach ($tests as $test_name => $tdata) {
+			if ($tdata['pass']) {
+				$pass++;
+			}
+			if ($tdata['run']) {
+				$run++;
+			}
+		}
+
+		return compact('total', 'pass', 'run');
+	}
+
+	/**
+	 * Retrieves stats about assertions run. returns an array with the keys 'total', 'pass', 'fail', 'expected_fail'
+	 *
+	 * If called without passing a test name, retrieves info about all assertions. Else just for the named test
+	 *
+	 * @param  array  $tests     a set of test results
+	 * @param string $test_name optional the name of the test about which to get assertion stats
+	 * @return array  has keys 'total', 'pass', 'fail', 'expected_fail'
+	 */
+	public static function assertion_stats(array $tests, $test_name = null) {
+		$total = 0;
+		$pass  = 0;
+		$fail  = 0;
+		$expected_fail = 0;
+
+		$test_asserts = function($test_name, $assertions) {
+
+			$total = 0;
+			$pass  = 0;
+			$fail  = 0;
+			$expected_fail = 0;
+
+			foreach ($assertions as $ass) {
+				if ($ass['result'] === \FUnit::PASS) {
+					$pass++;
+				} elseif ($ass['result'] === \FUnit::FAIL) {
+					$fail++;
+					if ($ass['expected_fail']) {
+						$expected_fail++;
+					}
+				}
+				$total++;
+			}
+
+			return compact('total', 'pass', 'fail', 'expected_fail');
+
+		};
+
+		if ($test_name) {
+			$assertions = $tests[$test_name]['assertions'];
+			$rs = $test_asserts($test_name, $assertions);
+			$total += $rs['total'];
+			$pass += $rs['pass'];
+			$fail += $rs['fail'];
+			$expected_fail += $rs['expected_fail'];
+		} else {
+			foreach ($tests as $test_name => $tdata) {
+				$assertions = $tests[$test_name]['assertions'];
+				$rs = $test_asserts($test_name, $assertions);
+				$total += $rs['total'];
+				$pass += $rs['pass'];
+				$fail += $rs['fail'];
+				$expected_fail += $rs['expected_fail'];
+			}
+		}
+
+		return compact('total', 'pass', 'fail', 'expected_fail');
+	}
+
+
+	/**
 	 * add a test to be executed
 	 *
 	 * Normally you would not call this method directly
@@ -495,31 +579,6 @@ class FUnit {
 		static::check_current_suite();
 		$suite = static::get_current_suite();
 		$suite->run_tests($filter);
-	}
-
-	/**
-	 * Normally you would not call this method directly
-	 *
-	 * Retrieves stats about assertions run. returns an array with the keys 'total', 'pass', 'fail', 'expected_fail'
-	 *
-	 * If called without passing a test name, retrieves info about all assertions. Else just for the named test
-	 *
-	 * @param string $test_name optional the name of the test about which to get assertion stats
-	 * @return array has keys 'total', 'pass', 'fail', 'expected_fail'
-	 */
-	protected static function assert_counts($test_name = null) {
-		return static::get_current_suite()->assertCounts($test_name);
-	}
-
-	/**
-	 * Normally you would not call this method directly
-	 *
-	 * Retrieves stats about tests run. returns an array with the keys 'total', 'pass', 'run'
-	 *
-	 * @return array has keys 'total', 'pass', 'run'
-	 */
-	protected static function test_counts() {
-		return static::get_current_suite()->testCounts();
 	}
 
 	/**

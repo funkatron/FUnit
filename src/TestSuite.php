@@ -30,11 +30,16 @@ class TestSuite
         $this->name = $name;
     }
 
+
     public function getName()
     {
         return $this->name;
     }
 
+    /**
+     * If any test fails, the exit code will be set to `1`. Otherwise `0`
+     * @return integer 0 or 1
+     */
     public function getExitCode()
     {
         return $this->exit_code;
@@ -232,79 +237,21 @@ class TestSuite
     }
 
     /**
-     * @see \FUnit::assert_counts()
+     * @see \FUnit::assertion_stats()
      * @return array
      */
     public function assertCounts($test_name = null)
     {
-
-        $total = 0;
-        $pass  = 0;
-        $fail  = 0;
-        $expected_fail = 0;
-
-        $test_asserts = function($test_name, $assertions) {
-
-            $total = 0;
-            $pass  = 0;
-            $fail  = 0;
-            $expected_fail = 0;
-
-            foreach ($assertions as $ass) {
-                if ($ass['result'] === \FUnit::PASS) {
-                    $pass++;
-                } elseif ($ass['result'] === \FUnit::FAIL) {
-                    $fail++;
-                    if ($ass['expected_fail']) {
-                        $expected_fail++;
-                    }
-                }
-                $total++;
-            }
-
-            return compact('total', 'pass', 'fail', 'expected_fail');
-
-        };
-
-        if ($test_name) {
-            $assertions = $this->tests[$test_name]['assertions'];
-            $rs = $test_asserts($test_name, $assertions);
-            $total += $rs['total'];
-            $pass += $rs['pass'];
-            $fail += $rs['fail'];
-            $expected_fail += $rs['expected_fail'];
-        } else {
-            foreach ($this->tests as $test_name => $tdata) {
-                $assertions = $this->tests[$test_name]['assertions'];
-                $rs = $test_asserts($test_name, $assertions);
-                $total += $rs['total'];
-                $pass += $rs['pass'];
-                $fail += $rs['fail'];
-                $expected_fail += $rs['expected_fail'];
-            }
-        }
-
-        return compact('total', 'pass', 'fail', 'expected_fail');
-
+        return \FUnit::assertion_stats($this->tests, $test_name);
     }
 
-
+    /**
+     * @see \FUnit::test_stats()
+     * @return array
+     */
     public function testCounts()
     {
-        $total = count($this->tests);
-        $run = 0;
-        $pass = 0;
-
-        foreach ($this->tests as $test_name => $tdata) {
-            if ($tdata['pass']) {
-                $pass++;
-            }
-            if ($tdata['run']) {
-                $run++;
-            }
-        }
-
-        return compact('total', 'pass', 'run');
+        return \FUnit::test_stats($this->tests, $test_name);
     }
 
     /**
