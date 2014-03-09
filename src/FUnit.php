@@ -667,15 +667,43 @@ class FUnit {
 	}
 
 	/**
+	 * We use this magic method to map various assertion calls to assert_{$name}()
+	 * This is so we can break out the call to add_assertion_result() and test
+	 * the assertion methods properly
+	 * @param  string $name      the assertion short name
+	 * @param  array $arguments  arguments to pass to "\FUnit::{$assert_name}()"
+	 * @return [type]            [description]
+	 */
+	public static function __callStatic($name, $arguments)
+	{
+		$assert_name = 'assert_' . $name;
+		if (method_exists('\FUnit', $assert_name)) {
+
+			switch ($assert_name) {
+				case "assert_fail":
+					$expected_fail = array_pop($arguments);
+					$msg = array_pop($arguments);
+					break;
+				default:
+					$expected_fail = false;
+					$msg = array_pop($arguments);
+			}
+			$rs = call_user_func_array("\FUnit::{$assert_name}", $arguments);
+			static::add_assertion_result($name, $arguments, $rs, $msg, $expected_fail);
+			return $rs;
+		}
+	}
+
+
+	/**
 	 * assert that $a is equal to $b. Uses `==` for comparison
 	 *
 	 * @param mixed $a the actual value
 	 * @param mixed $b the expected value
 	 * @param string $msg optional description of assertion
 	 */
-	public static function equal($a, $b, $msg = null) {
+	public static function assert_equal($a, $b, $msg = null) {
 		$rs = ($a == $b);
-		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be loosely equal');
 		}
@@ -689,9 +717,8 @@ class FUnit {
 	 * @param mixed $b the expected value
 	 * @param string $msg optional description of assertion
 	 */
-	public static function not_equal($a, $b, $msg = null) {
+	public static function assert_not_equal($a, $b, $msg = null) {
 		$rs = ($a != $b);
-		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be unequal');
 		}
@@ -705,9 +732,8 @@ class FUnit {
 	 * @param mixed $b the expected value
 	 * @param string $msg optional description of assertion
 	 */
-	public static function strict_equal($a, $b, $msg = null) {
+	public static function assert_strict_equal($a, $b, $msg = null) {
 		$rs = ($a === $b);
-		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be strictly equal');
 		}
@@ -721,12 +747,11 @@ class FUnit {
 	 * @param mixed $b the expected value
 	 * @param string $msg optional description of assertion
 	 */
-	public static function not_strict_equal($a, $b, $msg = null) {
+	public static function assert_not_strict_equal($a, $b, $msg = null) {
 		$rs = ($a !== $b);
-		static::add_assertion_result(__FUNCTION__, array($a, $b), $rs, $msg);
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) . ' and ' .
-			                  var_export($b, true) . ' to be strictly unequal');
+							  var_export($b, true) . ' to be strictly unequal');
 		}
 		return $rs;
 	}
@@ -736,9 +761,8 @@ class FUnit {
 	 * @param mixed $a the actual value
 	 * @param string $msg optional description of assertion
 	 */
-	public static function ok($a, $msg = null) {
+	public static function assert_ok($a, $msg = null) {
 		$rs = (bool)$a;
-		static::add_assertion_result(__FUNCTION__, array($a), $rs, $msg);
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) . ' to be truthy');
 		}
@@ -750,9 +774,8 @@ class FUnit {
 	 * @param mixed $a the actual value
 	 * @param string $msg optional description of assertion
 	 */
-	public static function not_ok($a, $msg = null) {
+	public static function assert_not_ok($a, $msg = null) {
 		$rs = !(bool)$a;
-		static::add_assertion_result(__FUNCTION__, array($a), $rs, $msg);
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) . ' to be falsy');
 		}
@@ -767,7 +790,7 @@ class FUnit {
 	 * @param  callable $callback [description]
 	 * @param string $msg optional description of assertion
 	 */
-	public static function all_ok($a, callable $callback, $msg = null) {
+	public static function assert_all_ok($a, callable $callback, $msg = null) {
 		if (is_array($a) || $a instanceof \Traversable) {
 			$rs = true;
 			$failed_val = null;
@@ -785,11 +808,10 @@ class FUnit {
 			$rs = false;
 		}
 
-		static::add_assertion_result(__FUNCTION__, array($a, $callback), $rs, $msg);
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($a, true) .
-			                  ' to return true in callback, but ' .
-			                  var_export($failed_val, true) .
+							  ' to return true in callback, but ' .
+							  var_export($failed_val, true) .
 							  ' returned false');
 		}
 		return $rs;
@@ -808,7 +830,7 @@ class FUnit {
 	 * @param string $msg
 	 * @return bool
 	 */
-	public static function throws(callable $callback, $params, $exception = null, $msg = null) {
+	public static function assert_throws(callable $callback, $params, $exception = null, $msg = null) {
 		if (is_array($params)) {
 			$exception = $exception ?: 'Exception';
 		} else {
@@ -822,7 +844,6 @@ class FUnit {
 		} catch (\Exception $e) {
 			$rs = $e instanceof $exception;
 		}
-		static::add_assertion_result(__FUNCTION__, array($callback, $exception), $rs, $msg);
 		if (!$rs) {
 			$txt = isset($e) ? 'got ' . get_class($e) : 'no exception thrown';
 			static::debug_out('Expected exception ' . $exception . ', but ' . $txt);
@@ -837,7 +858,7 @@ class FUnit {
 	 * @param array|object $haystack the array or object to test
 	 * @param string $msg optional description of assertion
 	 */
-	public static function has($needle, $haystack, $msg = null) {
+	public static function assert_has($needle, $haystack, $msg = null) {
 		if (is_object($haystack)) {
 			$rs = (bool)property_exists($haystack, $needle);
 		} elseif (is_array($haystack)) {
@@ -846,7 +867,6 @@ class FUnit {
 			$rs = false;
 		}
 
-		static::add_assertion_result(__FUNCTION__, array($needle, $haystack), $rs, $msg);
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($haystack, true) . ' to contain ' . var_export($needle, true));
 		}
@@ -860,7 +880,7 @@ class FUnit {
 	 * @param array|object $haystack the array or object to test
 	 * @param string $msg optional description of assertion
 	 */
-	public static function not_has($needle, $haystack, $msg = null) {
+	public static function assert_not_has($needle, $haystack, $msg = null) {
 		if (is_object($haystack)) {
 			$rs = !(bool)property_exists($haystack, $needle);
 		} elseif (is_array($haystack)) {
@@ -869,7 +889,6 @@ class FUnit {
 			$rs = false;
 		}
 
-		static::add_assertion_result(__FUNCTION__, array($needle, $haystack), $rs, $msg);
 		if (!$rs) {
 			static::debug_out('Expected: ' . var_export($haystack, true) . ' to NOT contain ' . var_export($needle, true));
 		}
@@ -881,8 +900,7 @@ class FUnit {
 	 * @param string $msg optional description of assertion
 	 * @param bool $exptected optionally expect this test to fail
 	 */
-	public static function fail($msg = null, $expected = false) {
-		static::add_assertion_result(__FUNCTION__, array(), false, $msg, $expected);
+	public static function assert_fail($msg = null, $expected = false) {
 		return false;
 	}
 
@@ -892,7 +910,7 @@ class FUnit {
 	 * @param bool $exptected optionally expect this test to fail
 	 * @see FUnit::fail()
 	 */
-	public static function expect_fail($msg = null) {
+	public static function assert_expect_fail($msg = null) {
 		return static::fail($msg, true);
 	}
 
@@ -900,8 +918,7 @@ class FUnit {
 	 * Force a successful assertion
 	 * @param string $msg optional description of assertion
 	 */
-	public static function pass($msg = null) {
-		static::add_assertion_result(__FUNCTION__, array(), true, $msg);
+	public static function assert_pass($msg = null) {
 		return true;
 	}
 
