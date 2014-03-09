@@ -43,7 +43,7 @@ class FUnit {
 	 * 		'assertions'=>array('func_name'=>'foo', 'func_args'=array('a','b'), 'result'=>$result, 'msg'=>'blahblah'),
 	 * 		'timing' => array('setup'=>ts, 'run'=>ts, 'teardown'=>ts, 'total'=ts),
 	 */
-	static $all_run_tests = array();
+	public static $all_run_tests = array();
 
 	static $current_suite_name = null;
 
@@ -54,8 +54,6 @@ class FUnit {
 	static $fixtures = array();
 
 	static $errors = array();
-
-	static $exit_code = 0;
 
 	/**
 	 * if `true`, will not output a report
@@ -258,25 +256,34 @@ class FUnit {
 	 * Output a report
 	 *
 	 * @param string $format  'text' (default) or 'xunit'.
+	 * @param array $tests_data  set of test data
 	 * @see FUnit::report_text()
+	 * @see FUnit::report_xunit()
 	 */
-	public static function report($format = 'text', $suite = null) {
-
-		if (!$suite) {
-			$suite = static::get_current_suite();
-		}
+	public static function report($format = 'text', array $tests_data = array()) {
 
 		switch($format) {
 			case 'xunit':
-				static::report_xunit($suite);
+				static::report_xunit($tests_data);
 				break;
 			case 'text':
-				static::report_text($suite);
+				static::report_text($tests_data);
 				break;
 			default:
-				static::report_text($suite);
+				static::report_text($tests_data);
 		}
 	}
+
+	/**
+	 * output a report for all tests than have been run from all suites
+	 * @param string $format  'text' (default) or 'xunit'.
+	 * @see FUnit::report_text()
+	 * @see FUnit::report_xunit()
+	 */
+	public static function report_all_tests($format) {
+		return static::report($format, static::$all_run_tests);
+	}
+
 
 	/**
 	 * Output a report as text
@@ -286,17 +293,17 @@ class FUnit {
 	 * @see FUnit::report()
 	 * @see FUnit::run()
 	 */
-	protected static function report_text($suite) {
+	protected static function report_text(array $tests) {
 
-		$total_assert_counts = $suite->assertCounts();
-		$test_counts = $suite->testCounts();
+		$total_assert_counts = static::assertion_stats($tests);
+		$test_counts = static::test_stats($tests);
 
-		FUnit::report_out("RESULTS:");
-		FUnit::report_out("--------------------------------------------");
+		static::report_out("RESULTS:");
+		static::report_out("--------------------------------------------");
 
-		foreach ($suite->getTests() as $name => $tdata) {
+		foreach ($tests as $name => $tdata) {
 
-			$assert_counts = $suite->assertCounts($name);
+			$assert_counts = static::assertion_stats($tests, $name);
 			if ($tdata['pass']) {
 				$test_color = 'GREEN';
 			} else {
@@ -306,7 +313,7 @@ class FUnit {
 					$test_color = 'RED';
 				}
 			}
-			FUnit::report_out("TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):", $test_color));
+			static::report_out("TEST:" . static::color(" {$name} ({$assert_counts['pass']}/{$assert_counts['total']}):", $test_color));
 
 			foreach ($tdata['assertions'] as $ass) {
 				if ($ass['expected_fail']) {
@@ -314,7 +321,7 @@ class FUnit {
 				} else {
 					$assert_color = $ass['result'] == static::PASS ? 'GREEN' : 'RED';
 				}
-				FUnit::report_out(" * "
+				static::report_out(" * "
 					. static::color("{$ass['result']}"
 					. " {$ass['func_name']}("
 					// @TODO we should coerce these into strings and output only on fail
@@ -326,7 +333,7 @@ class FUnit {
 				foreach ($tdata['errors'] as $error) {
 					$sep = "\n  -> ";
 					$bt = $sep . implode($sep, $error['backtrace']);
-					FUnit::report_out(
+					static::report_out(
 						' * ' . static::color(
 							strtoupper($error['type']) . ": {$error['msg']} in {$bt}",
 							'RED')
@@ -334,23 +341,23 @@ class FUnit {
 				}
 			}
 
-			FUnit::report_out("");
+			static::report_out("");
 		}
 
 
 		$err_count = count($tdata['errors']);
 		$err_color = (count($tdata['errors']) > 0) ? 'RED' : 'WHITE';
-		FUnit::report_out("ERRORS/EXCEPTIONS: "
+		static::report_out("ERRORS/EXCEPTIONS: "
 			. static::color($err_count, $err_color) );
 
 
-		FUnit::report_out("ASSERTIONS: "
+		static::report_out("ASSERTIONS: "
 				. static::color("{$total_assert_counts['pass']} pass", 'GREEN') . ", "
 				. static::color("{$total_assert_counts['fail']} fail", 'RED') . ", "
 				. static::color("{$total_assert_counts['expected_fail']} expected fail", 'YELLOW') . ", "
 				. static::color("{$total_assert_counts['total']} total", 'WHITE'));
 
-		FUnit::report_out("TESTS: {$test_counts['run']} run, "
+		static::report_out("TESTS: {$test_counts['run']} run, "
 				. static::color("{$test_counts['pass']} pass", 'GREEN') . ", "
 				. static::color("{$test_counts['total']} total", 'WHITE'));
 	}
@@ -363,12 +370,12 @@ class FUnit {
 	 * @see FUnit::report()
 	 * @see FUnit::run()
 	 */
-	protected static function report_xunit($suite) {
+	protected static function report_xunit(array $tests) {
 
-		$counts = $suite->testCounts();
+		$counts = static::test_stats($tests);
 		$xml = "<?xml version=\"1.0\"?>\n";
 		$xml .= "<testsuite tests=\"{$counts['total']}\">\n";
-		foreach ($suite->getTests() as $name => $tdata) {
+		foreach ($tests as $name => $tdata) {
 			$xml .= "    <testcase classname=\"funit.{$name}\" name=\"{$name}\" time=\"0\">\n";
 			if (!$tdata['pass']) {
 				$xml .= "<failure/>";
@@ -649,6 +656,11 @@ class FUnit {
 		static::get_current_suite()->addTest($name, $test);
 	}
 
+	/**
+	 * initialize a new test suite. adds a suite to \FUnit::$suites and sets
+	 * \FUnit::$current_suite_name to the new suite's name
+	 * @param  string $name default is FUnit::DEFAULT_SUITE_NAME
+	 */
 	public static function suite($name = self::DEFAULT_SUITE_NAME) {
 		$suite = static::add_suite($name);
 		static::$current_suite_name = $suite->getName();
@@ -925,7 +937,7 @@ class FUnit {
 		// run the tests in the suite
 		$run_tests = $suite->runTests($filter);
 		if ($report) {
-			static::report($report_format, $suite);
+			static::report($report_format, $run_tests);
 		}
 
 		// add this suite's data to the static $all_run_tests
