@@ -911,7 +911,7 @@ class FUnit {
 	 * @see FUnit::fail()
 	 */
 	public static function assert_expect_fail($msg = null) {
-		return static::fail($msg, true);
+		return static::assert_fail($msg, true);
 	}
 
 	/**
