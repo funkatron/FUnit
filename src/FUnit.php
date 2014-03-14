@@ -644,7 +644,8 @@ class FUnit
     public static function fixture($key, $val = null)
     {
         static::check_current_suite();
-        static::get_current_suite()->fixture($key, $val);
+        $fix_val = static::get_current_suite()->fixture($key, $val);
+        return $fix_val;
     }
 
     /**

@@ -101,10 +101,12 @@ class TestSuite
 
     public function fixture($key, $val = null)
     {
-        if (isset($val)) {
+        if (!is_null($val)) {
+            \FUnit::debug_out("setting fixture {$key} to " . \FUnit::val_to_string($val));
             $this->fixtures[$key] = $val;
         }
 
+        \FUnit::debug_out("returning fixture {$key} as " . \FUnit::val_to_string($this->fixtures[$key]));
         return $this->fixtures[$key];
     }
 
