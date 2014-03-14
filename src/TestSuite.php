@@ -165,10 +165,11 @@ class TestSuite
         $ts_setup = microtime(true);
 
         try {
+
             \FUnit::debug_out("executing test function for '{$name}'");
             $test();
 
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
 
             \FUnit::exception_handler($e);
 
@@ -207,10 +208,8 @@ class TestSuite
             }
         }
 
-        if (false === $this->tests[$name]['pass']){
-
+        if (false === $this->tests[$name]['pass']) {
             $this->exit_code = 1;
-
         }
 
         \FUnit::debug_out("Timing: " . json_encode($this->tests[$name]['timing'])); // json is easy to read
@@ -225,7 +224,7 @@ class TestSuite
      */
     public function runTests($filter = null)
     {
-        foreach ($this->tests as $name => &$test)  {
+        foreach ($this->tests as $name => &$test) {
             if (is_null($filter) || stripos($name, $filter) !== false) {
                 $this->runTest($name);
             } else {
@@ -263,5 +262,4 @@ class TestSuite
     {
 
     }
-
 }
