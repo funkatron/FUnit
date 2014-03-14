@@ -366,12 +366,10 @@ class FUnit
             static::report_out("");
         }
 
-
-        $err_count = count($tdata['errors']);
-        $err_color = (count($tdata['errors']) > 0) ? 'RED' : 'WHITE';
+        $err_color = ($test_counts['error'] > 0) ? 'RED' : 'WHITE';
         static::report_out(
             "ERRORS/EXCEPTIONS: "
-            . static::color($err_count, $err_color)
+            . static::color($test_counts['error'], $err_color)
         );
 
 
@@ -420,13 +418,14 @@ class FUnit
      * 'total', 'pass', 'run'
      *
      * @param  array $tests  a set of test results
-     * @return array has keys 'total', 'pass', 'run'
+     * @return array has keys 'total', 'pass', 'run', 'error'
      */
     public static function test_stats(array $tests)
     {
         $total = count($tests);
         $run = 0;
         $pass = 0;
+        $error = 0;
 
         foreach ($tests as $test_name => $tdata) {
             if ($tdata['pass']) {
@@ -435,9 +434,10 @@ class FUnit
             if ($tdata['run']) {
                 $run++;
             }
+            $error += count($tdata['errors']);
         }
 
-        return compact('total', 'pass', 'run');
+        return compact('total', 'pass', 'run', 'error');
     }
 
     /**
