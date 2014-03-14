@@ -187,4 +187,10 @@ fu::test('FUnit::assert_pass tests', function () {
     fu::strict_equal(true, fu::assert_pass()['result'], "forced pass");
 });
 
+fu::test('Ensure not including msg param has no side effects', function () {
+    fu::strict_equal(true, fu::assert_equal(1, 1, 'poop')['result']);
+    fu::strict_equal(true, fu::assert_equal(1, 1)['result']);
+});
+
+
 fu::run();
