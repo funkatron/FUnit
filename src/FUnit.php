@@ -988,19 +988,50 @@ class FUnit
         return array ('result' => true, 'fail_info' => 'always pass');
     }
 
-
-    public static function var_export($val)
+    /**
+     * uses var_export to get string representation of a value. This differs 
+     * from the standard var_export by removing newlines and allowing optional
+     * truncation
+     * @param  mixed  $val     the value to get as a string rep
+     * @param  integer $maxlen if > 0, truncate the string rep (default 30)
+     * @return string
+     */
+    public static function var_export($val, $maxlen = 30)
     {
         $vex = var_export($val, true);
         if (is_string($val)) {
-            return preg_replace("/[\\n]+/m", "\\n", $vex);
+            $str_val = preg_replace("/[\\n]+/m", "\\n", $vex);
         }
-        return preg_replace("/[\s\\n\\r]+/m", "", $vex);
+        $str_val = preg_replace("/[\s\\n\\r]+/m", "", $vex);
+        return static::str_truncate($str_val, $maxlen);
     }
 
-    public static function val_to_string($val)
+    /**
+     * truncates a string. If no second param is passed, no change is made
+     * @param  mixed  $val     the value to get as a string rep
+     * @param  integer $maxlen if > 0, truncate the string rep (default 0)
+     * @return string
+     */
+    public static function str_truncate($str_val, $maxlen = 0)
     {
-        switch(gettype($val)) {
+        if ($maxlen > 0 && strlen($str_val) > $maxlen) {
+            $str_val = substr($str_val, 0, $maxlen) . "...";
+        }
+        return $str_val;
+    }
+
+    /**
+     * converts all known PHP types into a string representation. Generally
+     * would be less verbose with objects and arrays than FUnit::var_export()
+     * because it uses json_encode()
+     * @param  mixed  $val     the value to get as a string rep
+     * @param  integer $maxlen if > 0, truncate the string rep (default 30)
+     * @return string
+     */
+    public static function val_to_string($val, $maxlen = 30)
+    {
+        $type = gettype($val);
+        switch($type) {
             case "boolean":
                 if ($val) {
                     $val = 'true';
@@ -1018,7 +1049,7 @@ class FUnit
                 $val = "'" . $val . "'";
                 break;
             case "array":
-                $val = 'Array' . json_encode($val);
+                $val = json_encode($val);
                 break;
             case "object":
                 $val = get_class($val) . " " . json_encode($val);
@@ -1032,7 +1063,7 @@ class FUnit
             default:
                 $val = "'" . (string)$val . "'";
         }
-        return $val;
+        return static::str_truncate("($type)" . $val, $maxlen);
     }
 
     /**
