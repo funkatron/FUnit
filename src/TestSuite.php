@@ -13,6 +13,10 @@ class TestSuite
 
     public $current_test_name = null;
 
+    public $before_func = null;
+
+    public $after_func = null;
+
     public $setup_func = null;
 
     public $teardown_func = null;
@@ -252,6 +256,14 @@ class TestSuite
      */
     public function runTests($filter = null)
     {
+        // before
+        if (isset($this->before_func)) {
+            \FUnit::debug_out("running before for suite '{$this->name}'");
+            $before_func = $this->before_func;
+            $before_func();
+            unset($before_func);
+        }
+
         foreach ($this->tests as $name => &$test) {
             if (is_null($filter) || stripos($name, $filter) !== false) {
                 $this->runTest($name);
@@ -260,6 +272,15 @@ class TestSuite
                 \FUnit::debug_out("skipping test {$name} due to filter");
             }
         }
+
+        // after
+        if (isset($this->after_func)) {
+            \FUnit::debug_out("running after for suite '{$this->name}'");
+            $after_func = $this->after_func;
+            $after_func();
+            unset($after_func);
+        }
+
         return $this->tests;
     }
 

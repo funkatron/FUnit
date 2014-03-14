@@ -690,6 +690,28 @@ class FUnit
     }
 
     /**
+     * register a function to run before the current suite's tests
+     *
+     * @param Closure $before an anon function
+     */
+    public static function before(\Closure $before)
+    {
+        static::check_current_suite();
+        static::get_current_suite()->before($before);
+    }
+
+    /**
+     * register a function to run after the current suite's tests
+     *
+     * @param Closure $after an anon function
+     */
+    public static function after(\Closure $after)
+    {
+        static::check_current_suite();
+        static::get_current_suite()->after($after);
+    }
+
+    /**
      * add a test to be run
      *
      * @param string $name the name for the test
