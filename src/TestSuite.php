@@ -127,7 +127,7 @@ class TestSuite
     /**
      * @see \FUnit::add_assertion_result()
      */
-    public function addAssertionResult($func_name, $func_args, $result, $file, $line, $msg = null, $expected_fail = false)
+    public function addAssertionResult($func_name, $func_args, $result, $file, $line, $fail_info, $msg = null, $expected_fail = false)
     {
         $result = ($result) ? \FUnit::PASS : \FUnit::FAIL;
         $refl_meth = new \ReflectionMethod($func_name);
@@ -147,7 +147,8 @@ class TestSuite
             'msg',
             'expected_fail',
             'file',
-            'line'
+            'line',
+            'fail_info'
         );
     }
 

@@ -344,7 +344,8 @@ class FUnit
                 $ass_str = "{$ass['result']} {$ass['func_name']}({$args_str}) {$ass['msg']}";
                 $ass_str .= ($ass['expected_fail'] ? '(expected)' : '');
                 if ($ass['result'] === static::FAIL) {
-                    $ass_str .= PHP_EOL . "  {$file_line}";
+                    $ass_str .= PHP_EOL . "   {$ass['fail_info']}";
+                    $ass_str .= PHP_EOL . "   {$file_line}";
                 }
 
                 static::report_out(" * " . static::color($ass_str, $assert_color));
@@ -587,10 +588,10 @@ class FUnit
      * @see FUnit::strict_equal()
      * @see FUnit::not_strict_equal()
      */
-    protected static function add_assertion_result($func_name, $func_args, $result, $file, $line, $msg = null, $expected_fail = false)
+    protected static function add_assertion_result($func_name, $func_args, $result, $file, $line, $fail_info, $msg = null, $expected_fail = false)
     {
         $suite = static::get_current_suite();
-        $suite->addAssertionResult($func_name, $func_args, $result, $file, $line, $msg, $expected_fail);
+        $suite->addAssertionResult($func_name, $func_args, $result, $file, $line, $fail_info, $msg, $expected_fail);
     }
 
     /**
@@ -742,15 +743,18 @@ class FUnit
                     $msg = array_pop($arguments);
             }
             $call_str = "\FUnit::{$assert_name}";
-            $rs = call_user_func_array("\FUnit::{$assert_name}", $arguments);
-            $btrace = debug_backtrace();
+            $ass_rs = call_user_func_array("\FUnit::{$assert_name}", $arguments);
 
+            $rs = $ass_rs['result'];
+            $fail_info = $ass_rs['fail_info'];
+
+            $btrace = debug_backtrace();
             // shift twice!
             array_shift($btrace);
             $assert_trace = array_shift($btrace);
             $file = $assert_trace['file'];
             $line = $assert_trace['line'];
-            static::add_assertion_result($call_str, $arguments, $rs, $file, $line, $msg, $expected_fail);
+            static::add_assertion_result($call_str, $arguments, $rs, $file, $line, $fail_info, $msg, $expected_fail);
             return $rs;
         }
         throw new \BadMethodCallException("Method {$assert_name} does not exist");
@@ -767,10 +771,8 @@ class FUnit
     public static function assert_equal($a, $b, $msg = null)
     {
         $rs = ($a == $b);
-        if (!$rs) {
-            static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be loosely equal');
-        }
-        return $rs;
+        $fail_info = 'Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be loosely equal';
+        return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
     /**
@@ -783,10 +785,8 @@ class FUnit
     public static function assert_not_equal($a, $b, $msg = null)
     {
         $rs = ($a != $b);
-        if (!$rs) {
-            static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be unequal');
-        }
-        return $rs;
+        $fail_info = 'Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be unequal';
+        return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
     /**
@@ -799,10 +799,8 @@ class FUnit
     public static function assert_strict_equal($a, $b, $msg = null)
     {
         $rs = ($a === $b);
-        if (!$rs) {
-            static::debug_out('Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be strictly equal');
-        }
-        return $rs;
+        $fail_info = 'Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be strictly equal';
+        return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
     /**
@@ -815,13 +813,9 @@ class FUnit
     public static function assert_not_strict_equal($a, $b, $msg = null)
     {
         $rs = ($a !== $b);
-        if (!$rs) {
-            static::debug_out(
-                'Expected: ' . var_export($a, true) . ' and ' .
-                var_export($b, true) . ' to be strictly unequal'
-            );
-        }
-        return $rs;
+        $fail_info = 'Expected: ' . var_export($a, true) . ' and ' .
+                var_export($b, true) . ' to be strictly unequal';
+        return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
     /**
@@ -832,10 +826,8 @@ class FUnit
     public static function assert_ok($a, $msg = null)
     {
         $rs = (bool)$a;
-        if (!$rs) {
-            static::debug_out('Expected: ' . var_export($a, true) . ' to be truthy');
-        }
-        return $rs;
+        $fail_info = 'Expected: ' . var_export($a, true) . ' to be truthy';
+        return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
     /**
@@ -846,10 +838,8 @@ class FUnit
     public static function assert_not_ok($a, $msg = null)
     {
         $rs = !(bool)$a;
-        if (!$rs) {
-            static::debug_out('Expected: ' . var_export($a, true) . ' to be falsy');
-        }
-        return $rs;
+        $fail_info = 'Expected: ' . var_export($a, true) . ' to be falsy';
+        return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
 
@@ -879,15 +869,11 @@ class FUnit
             $rs = false;
         }
 
-        if (!$rs) {
-            static::debug_out(
-                'Expected: ' . var_export($a, true) .
+        $fail_info = 'Expected: ' . var_export($a, true) .
                 ' to return true in callback, but ' .
                 var_export($failed_val, true) .
-                ' returned false'
-            );
-        }
-        return $rs;
+                ' returned false';
+        return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
 
@@ -918,11 +904,9 @@ class FUnit
         } catch (\Exception $e) {
             $rs = $e instanceof $exception;
         }
-        if (!$rs) {
-            $txt = isset($e) ? 'got ' . get_class($e) : 'no exception thrown';
-            static::debug_out('Expected exception ' . $exception . ', but ' . $txt);
-        }
-        return $rs;
+        $txt = isset($e) ? 'got ' . get_class($e) : 'no exception thrown';
+        $fail_info = 'Expected exception ' . $exception . ', but ' . $txt;
+        return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
     /**
@@ -942,10 +926,8 @@ class FUnit
             $rs = false;
         }
 
-        if (!$rs) {
-            static::debug_out('Expected: ' . var_export($haystack, true) . ' to contain ' . var_export($needle, true));
-        }
-        return $rs;
+        $fail_info = 'Expected: ' . var_export($haystack, true) . ' to contain ' . var_export($needle, true);
+        return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
     /**
@@ -965,10 +947,8 @@ class FUnit
             $rs = false;
         }
 
-        if (!$rs) {
-            static::debug_out('Expected: ' . var_export($haystack, true) . ' to NOT contain ' . var_export($needle, true));
-        }
-        return $rs;
+        $fail_info = 'Expected: ' . var_export($haystack, true) . ' to NOT contain ' . var_export($needle, true);
+        return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
     /**
@@ -978,7 +958,7 @@ class FUnit
      */
     public static function assert_fail($msg = null, $expected = false)
     {
-        return false;
+        return array ('result' => false, 'fail_info' => 'always fail');
     }
 
     /**
@@ -998,7 +978,7 @@ class FUnit
      */
     public static function assert_pass($msg = null)
     {
-        return true;
+        return array ('result' => true, 'fail_info' => 'always pass');
     }
 
     /**
