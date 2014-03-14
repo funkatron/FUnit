@@ -148,6 +148,6 @@ fu::set_debug(!!$flags['debug']);
 
 executeTests($testfiles, $flags['filter']);
 
-fu::report($flags['format']);
+fu::report_all_tests($flags['format']);
 
 exit(fu::exit_code());
