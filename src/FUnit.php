@@ -584,10 +584,10 @@ class FUnit
      * @see FUnit::strict_equal()
      * @see FUnit::not_strict_equal()
      */
-    protected static function add_assertion_result($func_name, $func_args, $result, $msg = null, $expected_fail = false)
+    protected static function add_assertion_result($func_name, $func_args, $result, $file, $line, $msg = null, $expected_fail = false)
     {
         $suite = static::get_current_suite();
-        $suite->addAssertionResult($func_name, $func_args, $result, $msg, $expected_fail);
+        $suite->addAssertionResult($func_name, $func_args, $result, $file, $line, $msg, $expected_fail);
     }
 
     /**
