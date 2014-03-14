@@ -1,6 +1,5 @@
 <?php
 use \FUnit as fu;
-use \FUnit\TestSuite;
 
 require_once __DIR__ . '/../src/FUnit.php';
 
