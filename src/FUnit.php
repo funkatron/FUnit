@@ -778,7 +778,7 @@ class FUnit
     public static function assert_equal($a, $b, $msg = null)
     {
         $rs = ($a == $b);
-        $fail_info = 'Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be loosely equal';
+        $fail_info = 'Expected: ' . static::var_export($a, true) . ' and ' . static::var_export($b, true) . ' to be loosely equal';
         return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
@@ -792,7 +792,7 @@ class FUnit
     public static function assert_not_equal($a, $b, $msg = null)
     {
         $rs = ($a != $b);
-        $fail_info = 'Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be unequal';
+        $fail_info = 'Expected: ' . static::var_export($a, true) . ' and ' . static::var_export($b, true) . ' to be unequal';
         return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
@@ -806,7 +806,7 @@ class FUnit
     public static function assert_strict_equal($a, $b, $msg = null)
     {
         $rs = ($a === $b);
-        $fail_info = 'Expected: ' . var_export($a, true) . ' and ' . var_export($b, true) . ' to be strictly equal';
+        $fail_info = 'Expected: ' . static::var_export($a, true) . ' and ' . static::var_export($b, true) . ' to be strictly equal';
         return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
@@ -820,8 +820,8 @@ class FUnit
     public static function assert_not_strict_equal($a, $b, $msg = null)
     {
         $rs = ($a !== $b);
-        $fail_info = 'Expected: ' . var_export($a, true) . ' and ' .
-                var_export($b, true) . ' to be strictly unequal';
+        $fail_info = 'Expected: ' . static::var_export($a, true) . ' and ' .
+                static::var_export($b, true) . ' to be strictly unequal';
         return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
@@ -833,7 +833,7 @@ class FUnit
     public static function assert_ok($a, $msg = null)
     {
         $rs = (bool)$a;
-        $fail_info = 'Expected: ' . var_export($a, true) . ' to be truthy';
+        $fail_info = 'Expected: ' . static::var_export($a, true) . ' to be truthy';
         return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
@@ -845,7 +845,7 @@ class FUnit
     public static function assert_not_ok($a, $msg = null)
     {
         $rs = !(bool)$a;
-        $fail_info = 'Expected: ' . var_export($a, true) . ' to be falsy';
+        $fail_info = 'Expected: ' . static::var_export($a, true) . ' to be falsy';
         return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
@@ -876,9 +876,9 @@ class FUnit
             $rs = false;
         }
 
-        $fail_info = 'Expected: ' . var_export($a, true) .
+        $fail_info = 'Expected: ' . static::var_export($a, true) .
                 ' to return true in callback, but ' .
-                var_export($failed_val, true) .
+                static::var_export($failed_val, true) .
                 ' returned false';
         return array ('result' => $rs, 'fail_info' => $fail_info);
     }
@@ -933,7 +933,7 @@ class FUnit
             $rs = false;
         }
 
-        $fail_info = 'Expected: ' . var_export($haystack, true) . ' to contain ' . var_export($needle, true);
+        $fail_info = 'Expected: ' . static::var_export($haystack, true) . ' to contain ' . static::var_export($needle, true);
         return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
@@ -954,7 +954,7 @@ class FUnit
             $rs = false;
         }
 
-        $fail_info = 'Expected: ' . var_export($haystack, true) . ' to NOT contain ' . var_export($needle, true);
+        $fail_info = 'Expected: ' . static::var_export($haystack, true) . ' to NOT contain ' . static::var_export($needle, true);
         return array ('result' => $rs, 'fail_info' => $fail_info);
     }
 
