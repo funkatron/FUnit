@@ -982,6 +982,50 @@ class FUnit
         return array ('result' => true, 'fail_info' => 'always pass');
     }
 
+
+    public static function var_export($val)
+    {
+        $vex = var_export($val, true);
+        return preg_replace("/[\s\\n\\r]+/m", "", $vex);
+    }
+
+    public static function val_to_string($val)
+    {
+        switch(gettype($val)) {
+            case "boolean":
+                if ($val) {
+                    $val = 'true';
+                } else {
+                    $val = 'false';
+                }
+                break;
+            case "integer":
+                $val = (string)$val;
+                break;
+            case "double":
+                $val = (string)$val;
+                break;
+            case "string":
+                $val = "'" . $val . "'";
+                break;
+            case "array":
+                $val = 'Array' . json_encode($val);
+                break;
+            case "object":
+                $val = get_class($val) . " " . json_encode($val);
+                break;
+            case "resource":
+                $val = get_resource_type($val);
+                break;
+            case "NULL":
+                $val = 'NULL';
+                break;
+            default:
+                $val = "'" . (string)$val . "'";
+        }
+        return $val;
+    }
+
     /**
      * Run the registered tests, and output a report
      *

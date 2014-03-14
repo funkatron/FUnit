@@ -137,7 +137,7 @@ class TestSuite
         foreach ($refl_meth->getParameters() as $key => $value) {
             $param = $value->name;
             if (array_key_exists($key, $func_args) && $param !== 'msg') {
-                $param_val = $this->valToString($func_args[$key]);
+                $param_val = \FUnit::val_to_string($func_args[$key]);
                 $args_strs[] = "\${$param}={$param_val}";
             }
         }
@@ -152,44 +152,6 @@ class TestSuite
             'line',
             'fail_info'
         );
-    }
-
-
-    public function valToString($val)
-    {
-        switch(gettype($val)) {
-            case "boolean":
-                if ($val) {
-                    $val = 'true';
-                } else {
-                    $val = 'false';
-                }
-                break;
-            case "integer":
-                $val = (string)$val;
-                break;
-            case "double":
-                $val = (string)$val;
-                break;
-            case "string":
-                $val = "'" . $val . "'";
-                break;
-            case "array":
-                $val = 'Array' . json_encode($val);
-                break;
-            case "object":
-                $val = get_class($val) . " " . json_encode($val);
-                break;
-            case "resource":
-                $val = get_resource_type($val);
-                break;
-            case "NULL":
-                $val = 'NULL';
-                break;
-            default:
-                $val = "'" . (string)$val . "'";
-        }
-        return $val;
     }
 
 
