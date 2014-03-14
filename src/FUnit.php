@@ -344,7 +344,7 @@ class FUnit
                 $ass_str = "{$ass['result']} {$ass['func_name']}({$args_str}) {$ass['msg']}";
                 $ass_str .= ($ass['expected_fail'] ? '(expected)' : '');
                 if ($ass['result'] === static::FAIL) {
-                    $ass_str .= " {$file_line}";
+                    $ass_str .= PHP_EOL . "  {$file_line}";
                 }
 
                 static::report_out(" * " . static::color($ass_str, $assert_color));
