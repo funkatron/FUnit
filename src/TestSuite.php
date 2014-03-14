@@ -127,11 +127,68 @@ class TestSuite
     /**
      * @see \FUnit::add_assertion_result()
      */
-    public function addAssertionResult($func_name, $func_args, $result, $msg = null, $expected_fail = false)
+    public function addAssertionResult($func_name, $func_args, $result, $file, $line, $msg = null, $expected_fail = false)
     {
         $result = ($result) ? \FUnit::PASS : \FUnit::FAIL;
-        $this->tests[$this->current_test_name]['assertions'][] = compact('func_name', 'func_args', 'result', 'msg', 'expected_fail');
+        $refl_meth = new \ReflectionMethod($func_name);
+        $args_strs = array();
+        foreach ($refl_meth->getParameters() as $key => $value) {
+            $param = $value->name;
+            if (array_key_exists($key, $func_args) && $param !== 'msg') {
+                $param_val = $this->valToString($func_args[$key]);
+                $args_strs[] = "\${$param}={$param_val}";
+            }
+        }
+        $this->tests[$this->current_test_name]['assertions'][] = compact(
+            'func_name',
+            'func_args',
+            'args_strs',
+            'result',
+            'msg',
+            'expected_fail',
+            'file',
+            'line'
+        );
     }
+
+
+    public function valToString($val)
+    {
+        switch(gettype($val)) {
+            case "boolean":
+                if ($val) {
+                    $val = 'true';
+                } else {
+                    $val = 'false';
+                }
+                break;
+            case "integer":
+                $val = (string)$val;
+                break;
+            case "double":
+                $val = (string)$val;
+                break;
+            case "string":
+                $val = "'" . $val . "'";
+                break;
+            case "array":
+                $val = 'Array' . json_encode($val);
+                break;
+            case "object":
+                $val = get_class($val) . " " . json_encode($val);
+                break;
+            case "resource":
+                $val = get_resource_type($val);
+                break;
+            case "NULL":
+                $val = 'NULL';
+                break;
+            default:
+                $val = "'" . (string)$val . "'";
+        }
+        return $val;
+    }
+
 
     /**
      * @see \FUnit::run_test()

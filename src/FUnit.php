@@ -334,17 +334,20 @@ class FUnit
                 } else {
                     $assert_color = $ass['result'] == static::PASS ? 'GREEN' : 'RED';
                 }
-                static::report_out(
-                    " * "
-                    . static::color(
-                        "{$ass['result']}"
-                        . " {$ass['func_name']}("
-                        // @TODO we should coerce these into strings and output only on fail
-                        // . implode(', ', $ass['func_args'])
-                        . ") {$ass['msg']}" . ($ass['expected_fail']? ' (expected)' : ''),
-                        $assert_color
-                    )
-                );
+
+                $file_line = "{$ass['file']}#{$ass['line']}";
+                $args_str = '';
+                if ($ass['result'] === static::FAIL) {
+                    $args_str = implode(', ', $ass['args_strs']);
+                }
+
+                $ass_str = "{$ass['result']} {$ass['func_name']}({$args_str}) {$ass['msg']}";
+                $ass_str .= ($ass['expected_fail'] ? '(expected)' : '');
+                if ($ass['result'] === static::FAIL) {
+                    $ass_str .= " {$file_line}";
+                }
+
+                static::report_out(" * " . static::color($ass_str, $assert_color));
             }
             if (count($tdata['errors']) > 0) {
                 $bt = '';
@@ -723,15 +726,31 @@ class FUnit
 
             switch ($assert_name) {
                 case "assert_fail":
-                    $expected_fail = array_pop($arguments);
+                    if (count($arguments) > 1) {
+                        $expected_fail = array_pop($arguments);
+                    } else {
+                        $expected_fail = false;
+                    }
+                    $msg = array_pop($arguments);
+                    break;
+                case "assert_expect_fail":
+                    $expected_fail = true;
                     $msg = array_pop($arguments);
                     break;
                 default:
                     $expected_fail = false;
                     $msg = array_pop($arguments);
             }
+            $call_str = "\FUnit::{$assert_name}";
             $rs = call_user_func_array("\FUnit::{$assert_name}", $arguments);
-            static::add_assertion_result($name, $arguments, $rs, $msg, $expected_fail);
+            $btrace = debug_backtrace();
+
+            // shift twice!
+            array_shift($btrace);
+            $assert_trace = array_shift($btrace);
+            $file = $assert_trace['file'];
+            $line = $assert_trace['line'];
+            static::add_assertion_result($call_str, $arguments, $rs, $file, $line, $msg, $expected_fail);
             return $rs;
         }
         throw new \BadMethodCallException("Method {$assert_name} does not exist");
