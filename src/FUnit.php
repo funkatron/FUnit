@@ -992,6 +992,9 @@ class FUnit
     public static function var_export($val)
     {
         $vex = var_export($val, true);
+        if (is_string($val)) {
+            return preg_replace("/[\\n]+/m", "\\n", $vex);
+        }
         return preg_replace("/[\s\\n\\r]+/m", "", $vex);
     }
 
