@@ -303,12 +303,14 @@ class TestSuite
     }
 
     /**
-     * runs the suite and returns the exit code
+     * runs the suite and returns test results
      * @param  string $filter
-     * @return integer         exit code
+     * @return array
      */
     public function run($filter = null)
     {
-
+        $rs = $this->runTests($filter);
+        $this->run = true;
+        return $rs;
     }
 }

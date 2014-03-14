@@ -1115,7 +1115,7 @@ class FUnit
 
         // run the tests in the suite
         FUnit::debug_out("Running tests in suite '" . $suite->getName() . "'");
-        $run_tests = $suite->runTests($filter);
+        $run_tests = $suite->run($filter);
 
         if (static::$disable_reporting) {
             FUnit::debug_out("Reporting disabled");
