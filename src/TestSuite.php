@@ -106,8 +106,14 @@ class TestSuite
             $this->fixtures[$key] = $val;
         }
 
-        \FUnit::debug_out("returning fixture {$key} as " . \FUnit::val_to_string($this->fixtures[$key]));
-        return $this->fixtures[$key];
+        if (!array_key_exists($key, $this->fixtures)) {
+            $f_val = null;
+        } else {
+            $f_val = $this->fixtures[$key];
+        }
+
+        \FUnit::debug_out("returning fixture {$key} as " . \FUnit::val_to_string($f_val));
+        return $f_val;
     }
 
     public function resetFixtures()
