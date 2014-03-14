@@ -163,7 +163,7 @@ class FUnit
      * @see FUnit::error_handler()
      * @see FUnit::exception_handler()
      */
-    protected static function parse_backtrace($bt_raw)
+    public static function parse_backtrace($bt_raw)
     {
         $backtrace = array();
         foreach ($bt_raw as $bt) {
