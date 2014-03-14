@@ -724,6 +724,7 @@ class FUnit
     public static function __callStatic($name, $arguments)
     {
         $assert_name = 'assert_' . $name;
+        $call_str = "\FUnit::{$assert_name}";
         if (method_exists('\FUnit', $assert_name)) {
 
             switch ($assert_name) {
@@ -741,10 +742,15 @@ class FUnit
                     break;
                 default:
                     $expected_fail = false;
-                    $msg = array_pop($arguments);
+                    $refl_meth = new \ReflectionMethod($call_str);
+                    if (count($refl_meth->getParameters()) === count($arguments)) {
+                        $msg = array_pop($arguments);
+                    } else {
+                        $msg = null;
+                    }
             }
-            $call_str = "\FUnit::{$assert_name}";
-            $ass_rs = call_user_func_array("\FUnit::{$assert_name}", $arguments);
+
+            $ass_rs = call_user_func_array($call_str, $arguments);
 
             $rs = $ass_rs['result'];
             $fail_info = $ass_rs['fail_info'];
