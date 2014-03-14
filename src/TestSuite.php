@@ -269,7 +269,7 @@ class TestSuite
                 $this->runTest($name);
             } else {
                 $this->tests[$name]['skipped'] = true;
-                \FUnit::debug_out("skipping test {$name} due to filter");
+                \FUnit::debug_out("skipping test {$name} due to filter '{$filter}'");
             }
         }
 
