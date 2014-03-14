@@ -577,6 +577,7 @@ class FUnit
      *
      * Normally you would not call this method directly
      *
+     * @param \FUnit\TestSuite $suite the suite to add the result to
      * @param string $func_name the name of the assertion function
      * @param array $func_args the arguments for the assertion. Really just the $a (actual) and $b (expected)
      * @param mixed $result this is expected to be truthy or falsy, and is converted into FUnit::PASS or FUnit::FAIL
@@ -588,9 +589,8 @@ class FUnit
      * @see FUnit::strict_equal()
      * @see FUnit::not_strict_equal()
      */
-    protected static function add_assertion_result($func_name, $func_args, $result, $file, $line, $fail_info, $msg = null, $expected_fail = false)
+    protected static function add_assertion_result(\FUnit\TestSuite $suite, $func_name, $func_args, $result, $file, $line, $fail_info, $msg = null, $expected_fail = false)
     {
-        $suite = static::get_current_suite();
         $suite->addAssertionResult($func_name, $func_args, $result, $file, $line, $fail_info, $msg, $expected_fail);
     }
 
@@ -747,6 +747,18 @@ class FUnit
     {
         $assert_name = 'assert_' . $name;
         $call_str = "\FUnit::{$assert_name}";
+
+        /**
+         * Assertions are called in the context of a suite. By default we use
+         * the "current" suite, but we can force a different suite by passing
+         * the suite object as the first argument. This is mainly so we can test
+         * suites themselves.
+         */
+        $suite = static::get_current_suite();
+        if (isset($arguments[0]) && $arguments[0] instanceof \FUnit\TestSuite) {
+            $suite = array_shift($arguments);
+        }
+
         if (method_exists('\FUnit', $assert_name)) {
 
             switch ($assert_name) {
@@ -783,7 +795,7 @@ class FUnit
             $assert_trace = array_shift($btrace);
             $file = $assert_trace['file'];
             $line = $assert_trace['line'];
-            static::add_assertion_result($call_str, $arguments, $rs, $file, $line, $fail_info, $msg, $expected_fail);
+            static::add_assertion_result($suite, $call_str, $arguments, $rs, $file, $line, $fail_info, $msg, $expected_fail);
             return $rs;
         }
         throw new \BadMethodCallException("Method {$assert_name} does not exist");

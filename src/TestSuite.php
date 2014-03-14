@@ -141,6 +141,7 @@ class TestSuite
      */
     public function addAssertionResult($func_name, $func_args, $result, $file, $line, $fail_info, $msg = null, $expected_fail = false)
     {
+        \FUnit::debug_out("Adding assertion result for '{$func_name}' to suite '" . $this->getName() . "'");
         $result = ($result) ? \FUnit::PASS : \FUnit::FAIL;
         $refl_meth = new \ReflectionMethod($func_name);
         $args_strs = array();
@@ -178,7 +179,7 @@ class TestSuite
             return $this->tests[$name];
         }
 
-        \FUnit::info_out("Running test '{$name}...'");
+        \FUnit::info_out("Running test '{$name}' in suite {$this->getName()}");
 
         $ts_start = microtime(true);
 
