@@ -123,7 +123,7 @@ function scanDirectoryForTestFiles($dirpath) {
 
 function recursivelyScanDirectoryForTestFiles($dirpath) {
     $rdi = new \RecursiveDirectoryIterator($dirpath);
-    $rii = new RecursiveIteratorIterator($di);
+    $rii = new RecursiveIteratorIterator($rdi);
     $testfiles = array();
     foreach ($rii as $fileInfo) {
         if (preg_match("#(tests?)#i", $fileInfo->getBasename())) {
