@@ -108,7 +108,7 @@ function scanDirectoryForTestFiles($dirpath) {
     $di = new \DirectoryIterator($dirpath);
     $testfiles = array();
     foreach ($di as $fileInfo) {
-        if (preg_match("#(tests?)#", $fileInfo->getBasename())) {
+        if (preg_match("#(tests?)#i", $fileInfo->getBasename())) {
             $testfiles[] = $fileInfo->getPathname();
         }
     }
