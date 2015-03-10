@@ -10,4 +10,4 @@ php:
 install:
   - composer install
 
-script: vendor/bin/fu test
+script: bin/fu tests
