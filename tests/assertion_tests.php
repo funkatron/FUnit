@@ -62,6 +62,15 @@ fu::test('FUnit::assert_all_ok tests', function () {
         return is_int($val);
     });
     fu::strict_equal(false, $assert['result'], "\$not_all_ints are NOT all integers");
+
+    try {
+        fu::assert_all_ok($all_ints, 'not callable');
+    } catch (\Exception $e) {
+        fu::ok(
+            $e instanceof \InvalidArgumentException,
+            'throws InvalidArgumentException if no valid callback is provided'
+        );
+    }
 });
 
 
@@ -198,6 +207,15 @@ fu::test('FUnit::assert_throws tests', function () {
     $assert = fu::assert_throws($callback, array('bar'), 'LogicException');
     $rs = $assert['result'];
     fu::strict_equal(false, $rs, "callback didn't throw correct exception type");
+    
+    try {
+        fu::assert_throws('not callable', array());
+    } catch (\Exception $e) {
+        fu::ok(
+            $e instanceof \InvalidArgumentException,
+            'throws InvalidArgumentException if no valid callback is provided'
+        );
+    }
 });
 
 fu::test('FUnit::assert_has tests', function () {
