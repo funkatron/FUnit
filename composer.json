@@ -2,7 +2,7 @@
 	"name": "funkatron/funit",
 	"description": "The testing microframework for PHP 5.3+, partially inspired by QUnit.",
 	"homepage": "http://github.com/funkatron/FUnit",
-	"license": "Apache 2.0",
+	"license": "Apache-2.0",
 	"keywords": ["test", "unit", "testing", "simple", "microphp", "micro"],
 	"authors": [
 		{
