@@ -1,7 +1,8 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
+        "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
     ],
     "hash": "2bbdd2393f13332683b4eacc0dcccd15",
     "packages": [
@@ -53,16 +54,16 @@
         },
         {
             "name": "nategood/commando",
-            "version": "0.2.5",
+            "version": "0.2.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nategood/commando.git",
-                "reference": "2b904d48b2296a099c2fd9fc2212eff9cfc0a7c5"
+                "reference": "873183f0062514ff8c50851f0d8ce98cbbd5ac72"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nategood/commando/zipball/2b904d48b2296a099c2fd9fc2212eff9cfc0a7c5",
-                "reference": "2b904d48b2296a099c2fd9fc2212eff9cfc0a7c5",
+                "url": "https://api.github.com/repos/nategood/commando/zipball/873183f0062514ff8c50851f0d8ce98cbbd5ac72",
+                "reference": "873183f0062514ff8c50851f0d8ce98cbbd5ac72",
                 "shasum": ""
             },
             "require": {
@@ -82,8 +83,7 @@
             "authors": [
                 {
                     "name": "Nate Good",
-                    "email": "me@nategood.com",
-                    "homepage": "http://nategood.com"
+                    "email": "me@nategood.com"
                 }
             ],
             "description": "PHP CLI Commando Style",
@@ -96,23 +96,17 @@
                 "command line interface",
                 "scripting"
             ],
-            "time": "2014-02-02 20:46:29"
+            "time": "2015-01-05 15:55:41"
         }
     ],
-    "packages-dev": [
-
-    ],
-    "aliases": [
-
-    ],
+    "packages-dev": [],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [
-
-    ],
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
     "platform": {
         "php": ">=5.3"
     },
-    "platform-dev": [
-
-    ]
+    "platform-dev": []
 }

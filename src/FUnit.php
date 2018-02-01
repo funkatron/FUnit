@@ -891,8 +891,16 @@ class FUnit
      * @param  callable $callback [description]
      * @param string $msg optional description of assertion
      */
-    public static function assert_all_ok($a, callable $callback, $msg = null)
+    public static function assert_all_ok($a, $callback, $msg = null)
     {
+        if (!is_callable($callback)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Expected callable argument. %s given',
+                is_object($callback) ? get_class($callback) : gettype($callback)
+            ));
+            
+        }
+
         if (is_array($a) || $a instanceof \Traversable) {
             $rs = true;
             $failed_val = null;
@@ -930,8 +938,16 @@ class FUnit
      * @param string $msg
      * @return bool
      */
-    public static function assert_throws(callable $callback, $params, $exception = null, $msg = null)
+    public static function assert_throws($callback, $params, $exception = null, $msg = null)
     {
+        if (!is_callable($callback)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Expected callable argument. %s given',
+                is_object($callback) ? get_class($callback) : gettype($callback)
+            ));
+            
+        }
+
         if (is_array($params)) {
             $exception = $exception ?: 'Exception';
         } else {
